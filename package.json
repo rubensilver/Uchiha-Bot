@@ -1,18 +1,23 @@
 {
   "name": "uchiha-bot-intern",
   "version": "1.0.0",
-  "description": "",
+  "description": "Um bot simples para WhatsApp usando Node.js",
   "main": "index.js",
-  "type": "module", 
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "baileys"
+  ],
+  "author": "Rúben Silver",
+  "license": "MIT",
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.2",
     "pino": "^9.4.0",
+    "qrcode-terminal": "^0.1.1"
   }
 }
+
