@@ -1,0 +1,1 @@
+// contents of infomestre.js

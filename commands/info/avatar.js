@@ -1,0 +1,1 @@
+// contents of avatar.js
