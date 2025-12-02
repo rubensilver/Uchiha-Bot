@@ -1,8 +1,8 @@
 {
-  "name": "uchiha-bot",
+  "name": "Uchiha-Bot",
   "version": "10.0.1",
   "description": "Contato: +244948963368",
-  "main": "start.js",
+  "main": "dist/index.js",
   "author": "Rúben Silver",
   "license": "MIT",
   "type": "module",
@@ -10,30 +10,16 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node start.js",
-    "dev": "ts-node src/index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "lint": "eslint --fix .",
-    "test": "jest"
+    "start": "node dist/index.js"
   },
   "dependencies": {
-    "axios": "^1.12.0",
     "express": "^5.1.0",
-    "formdata-node": "^6.0.3",
-    "fs-extra": "^11.1.0",
-    "moment-timezone": "^0.5.40",
-    "chalk": "^4.1.2"
+    "axios": "^1.12.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "typescript": "^5.9.3",
-    "ts-node": "^10.9.2",
-    "@eslint/eslintrc": "^3.3.3",
-    "@eslint/js": "^9.39.1",
-    "eslint": "^8.57.1",
-    "globals": "^16.5.0",
-    "jest": "^30.2.0",
-    "eslint-plugin-jest": "^29.2.1",
-    "prettier": "^3.7.2"
+    "typescript": "^5.7.0",
+    "ts-node-dev": "^2.0.0"
   }
 }
