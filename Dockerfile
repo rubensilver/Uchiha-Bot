@@ -18,4 +18,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Inicia diretamente o Node (mantém o processo vivo)
-CMD ["node", "dist/index.js"]
+CMD ["node", "build/index.js"]

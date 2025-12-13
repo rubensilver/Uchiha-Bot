@@ -1,0 +1,30 @@
+Uchiha — Menu-ADM (Uchiha Supremo)
+=================================
+
+Passos para integrar no teu projeto:
+
+1) Copiar ficheiros:
+   - src/admin/AdminConfig.ts
+   - src/menus/menuADM.ts
+   - scripts/generateAdminStubs.ts
+
+2) Criar pasta data:
+   - data/admin-config.json será criado automaticamente pelo AdminConfig.
+
+3) Instalar dependências dev caso falte:
+   - npm i -D ts-node @types/node
+
+4) Gerar stubs de comandos:
+   - npx ts-node scripts/generateAdminStubs.ts
+   - Isto cria `src/commands/admin/*.ts` e `_index.ts`.
+
+5) Integrar no teu `index.ts`:
+   - Para mostrar o Menu-ADM quando o comando for `!menu-adm`, usa:
+
+```ts
+// dentro do teu handler messages.upsert
+if (cmd === "!menu-adm" || cmd === "!menu-adm") {
+  const prefix = AdminConfig.getAll().prefixes?.[0] ?? "!";
+  const text = require("./menus/menuADM").MENU_ADM(prefix);
+  await sock.sendMessage(from, { text });
+}
