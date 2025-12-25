@@ -13,7 +13,7 @@
   "type": "commonjs",
   "scripts": {
   "test": "echo \"No tests yet\""
-    }
+    },
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node build/index.js"
