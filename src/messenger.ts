@@ -1,6 +1,6 @@
 import { WASocket, proto } from "@whiskeysockets/baileys";
 import { executeCommand, listCommands } from "../core/commandHandler";
-import { CommandContext } from "../types/Command"; // Verifique se o caminho está correto
+import { CommandContext } from "./types/Command"; // Corrigido o caminho relativo
 import { handleMenu } from "../menus/menuHandler";
 import { PrefixManager } from "./PrefixManager";
 import { handleAnti } from "../anti/AntiSystem";
