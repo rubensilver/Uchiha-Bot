@@ -1,6 +1,6 @@
 import { WASocket, proto } from "@whiskeysockets/baileys";
 import { executeCommand, listCommands } from "../core/commandHandler";
-import { CommandContext } from "../types/Command";
+import { CommandContext } from "../types/Command"; // Verifique se o caminho está correto
 import { handleMenu } from "../menus/menuHandler";
 import { PrefixManager } from "./PrefixManager";
 import { handleAnti } from "../anti/AntiSystem";
@@ -15,7 +15,7 @@ export async function handleMessage(
 ) {
   try {
     // Verificações básicas
-    if (!msg.message || !msg.key?. remoteJid) return;
+    if (!msg.message || !msg.key?.remoteJid) return; // Corrigido o espaço extra
 
     const isOwner = isMessageFromOwner(msg);
 
@@ -24,7 +24,7 @@ export async function handleMessage(
     if (!text) return;
 
     // Aplicar sistema anti (spam, etc)
-    if (! isOwner) {
+    if (!isOwner) {
       const shouldIgnore = await handleAnti(sock, msg);
       if (shouldIgnore) return;
     }
@@ -33,7 +33,7 @@ export async function handleMessage(
     const prefix = PrefixManager.getPrefix();
 
     // Verificar se começa com prefix
-    if (! text.startsWith(prefix)) return;
+    if (!text.startsWith(prefix)) return;
 
     const body = text.trim();
     const commandName = body
@@ -67,7 +67,7 @@ export async function handleMessage(
 
     if (!executed) {
       // Responder que comando não foi encontrado (opcional)
-      await sendReply(sock, msg, `❌ Comando \`${commandName}\` não encontrado! `);
+      await sendReply(sock, msg, `❌ Comando \`${commandName}\` não encontrado!`);
     }
   } catch (error) {
     console.error("❌ Erro ao processar mensagem:", error);
@@ -87,8 +87,8 @@ function extractMessageText(msg: proto.IWebMessageInfo): string | null {
   }
 
   // Mensagem de texto estendida
-  if (message.extendedTextMessage?. text) {
-    return message. extendedTextMessage.text;
+  if (message.extendedTextMessage?.text) { // Corrigido o espaço extra
+    return message.extendedTextMessage.text;
   }
 
   return null;
@@ -98,8 +98,8 @@ function extractMessageText(msg: proto.IWebMessageInfo): string | null {
  * Verifica se a mensagem é do dono
  */
 function isMessageFromOwner(msg: proto.IWebMessageInfo): boolean {
-  const sender = msg.key?.remoteJid || "";
-  return OWNER. numbers.some((num) => sender.includes(num));
+  const sender = msg.key?.remoteJid || ""; // Corrigido o espaço extra
+  return OWNER.numbers.some((num) => sender.includes(num));
 }
 
 /**
@@ -122,7 +122,7 @@ export async function sendReply(
  * Registrar handler de mensagens
  */
 export function registerMessageHandler(sock: WASocket) {
-  sock.ev.on("messages. upsert", async ({ messages }) => {
+  sock.ev.on("messages.upsert", async ({ messages }) => { // Corrigido o espaço extra
     for (const msg of messages) {
       await handleMessage(sock, msg);
     }
