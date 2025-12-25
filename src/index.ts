@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { startBot } from "./start";
 import { Command } from "./types/Command";
-import { registerCommand } from "./core/commandHandler";
+import { registerCommand } from "./commands/commandHandler";
 
 // 🔥 carrega TODOS os comandos e registra no handler
 export function loadCommands() {
