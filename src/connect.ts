@@ -13,11 +13,18 @@ import path from "path";
 import readline from "readline";
 import colors from "colors";
 
+// (APENAS A PARTE RELEVANTE - resto mantém como está)
+
 import { loadCommands } from "./commands/loader";
+import { registerMessageHandler } from "./handlers/messageHandler"; // ✅ MUDAR AQUI
 import { BOT_NUMBER } from "./config/settings";
-import { registerMessageHandler } from "./messenger";
 import { AntiLigarState } from "./state/AntiLigarState";
 
+export async function connect(): Promise<WASocket> {
+  // 🔥 CARREGA COMANDOS ANTES DE TUDO
+  loadCommands();
+
+}
 let reconnecting = false;
 
 /* ================== READLINE ================== */
