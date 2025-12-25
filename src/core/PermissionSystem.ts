@@ -16,20 +16,25 @@ export interface PermissionContext {
   groupId?: string;
 }
 
+// Extensão do tipo 'GroupMetadata' para garantir que a propriedade 'admins' exista
+interface GroupMetadata {
+  admins: string[]; // A propriedade 'admins' é um array de strings (IDs dos administradores)
+}
+
 export class PermissionSystem {
   /**
    * Verifica se o usuário é dono do bot
    */
   static isOwner(msg: proto.IWebMessageInfo): boolean {
-    const sender = msg.key?. remoteJid || "";
-    return OWNER. numbers.some((num) => sender. includes(num));
+    const sender = msg.key?.remoteJid || "";
+    return OWNER.numbers.some((num) => sender.includes(num));
   }
 
   /**
    * Verifica se a mensagem é de um grupo
    */
   static isGroup(jid: string): boolean {
-    return jid.endsWith("@g. us");
+    return jid.endsWith("@g.us");
   }
 
   /**
@@ -51,11 +56,11 @@ export class PermissionSystem {
     const sender = msg.key?.participant;
 
     if (!jid || !sender) return false;
-    if (! this.isGroup(jid)) return false;
+    if (!this.isGroup(jid)) return false;
 
     try {
       const metadata = await this.getGroupMetadata(sock, jid);
-      return metadata?. admins?.includes(sender) ?? false;
+      return metadata?.admins?.includes(sender) ?? false;
     } catch {
       return false;
     }
@@ -81,7 +86,7 @@ export class PermissionSystem {
    */
   static async checkPermission(
     sock: WASocket,
-    msg: proto. IWebMessageInfo,
+    msg: proto.IWebMessageInfo,
     requiredLevel: PermissionLevel
   ): Promise<boolean> {
     const jid = msg.key?.remoteJid || "";
