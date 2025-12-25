@@ -20,13 +20,6 @@ import { registerMessageHandler } from "./handlers/messageHandler"; // ✅ MUDAR
 import { BOT_NUMBER } from "./config/settings";
 import { AntiLigarState } from "./state/AntiLigarState";
 
-export async function connect(): Promise<WASocket> {
-  // 🔥 CARREGA COMANDOS ANTES DE TUDO
-  loadCommands();
-
-}
-let reconnecting = false;
-
 /* ================== READLINE ================== */
 const rl = readline.createInterface({
   input: process.stdin,
@@ -40,6 +33,8 @@ const question = (text: string): Promise<string> =>
 export async function connect(): Promise<WASocket> {
   // 🔥 CARREGA COMANDOS UMA ÚNICA VEZ
   loadCommands();
+}
+let reconnecting = false;
 
   const authDir = path.resolve("auth");
 
