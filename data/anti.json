@@ -1,0 +1,32 @@
+{
+  "1203630@g.us": {
+    "whitelist": {
+      "enabled": true,
+      "users": [
+        "5599999999@s.whatsapp.net"
+      ]
+    },
+    "config": {
+      "mode": "kick",
+      "maxWarn": 3
+    },
+    "anti-img": {
+      "enabled": true,
+      "warns": {
+        "5599999999@s.whatsapp.net": 1
+      }
+    },
+    "anti-video": {
+      "enabled": true,
+      "warns": {
+        "5599999999@s.whatsapp.net": 1
+      }
+    }
+  },
+  "120363404637342148@g.us": {
+    "config": {
+      "nsfw": true,
+      "commandMode": "all"
+    }
+  }
+}

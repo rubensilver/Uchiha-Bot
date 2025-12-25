@@ -1,16 +1,20 @@
-// src/commands/bot/ping.ts
+import { Command } from '../../types/Command';
 
-export default {
-    name: "ping",
-    description: "Mostra o tempo de resposta do Bot (Tema Uchiha).",
+const command: Command = {
+  meta: {
+    name: 'ping',
+    category: 'bot',
+    description: 'Comando do sistema Uchiha'
+  },
+  async run(ctx) {
+    const { sock, msg, args } = ctx;
+    const jid = msg.key?.remoteJid!;
+    if (!jid) return;
 
-    async execute(sock: any, msg: any) {
-        const start = Date.now();
-        await sock.sendMessage(msg.from, { text: "⏳ O Sharingan está analisando..." });
-        const latency = Date.now() - start;
-
-        await sock.sendMessage(msg.from, {
-            text: `🔥 *Ping Uchiha*: ${latency}ms\n“Até o tempo teme os Uchihas.”`
-        });
-    }
+    await sock.sendMessage(jid!, {
+      text: `🔥 『Uchiha』 O comando *ping* foi invocado corretamente.`
+    });
+  }
 };
+
+export default command;

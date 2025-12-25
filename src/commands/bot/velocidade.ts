@@ -1,19 +1,20 @@
-// src/commands/bot/velocidade.ts
+import { Command } from '../../types/Command';
 
-export default {
-    name: "velocidade",
-    description: "Testa a velocidade do bot (estilo Uchiha).",
+const command: Command = {
+  meta: {
+    name: 'velocidade',
+    category: 'bot',
+    description: 'Comando do sistema Uchiha'
+  },
+  async run(ctx) {
+    const { sock, msg, args } = ctx;
+    const jid = msg.key?.remoteJid!;
+    if (!jid) return;
 
-    async execute(sock: any, msg: any) {
-        const inicio = performance.now();
-
-        await sock.sendMessage(msg.from, { text: "⚡ O chakra está fluindo..." });
-
-        const fim = performance.now();
-        const resultado = (fim - inicio).toFixed(2);
-
-        await sock.sendMessage(msg.from, {
-            text: `⚡ *Velocidade Uchiha*: ${resultado}ms\n“Quando o chakra desperta, até o vento obedece.”`
-        });
-    }
+    await sock.sendMessage(jid!, {
+      text: `🔥 『Uchiha』 O comando *velocidade* foi invocado corretamente.`
+    });
+  }
 };
+
+export default command;

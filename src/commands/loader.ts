@@ -1,112 +1,55 @@
-// src/commands/loader.ts
-import * as fs from "fs";
+import { Command, CommandContext } from "../types/Command";
 import * as path from "path";
+import * as fs from "fs";
 
-export interface Command {
-  meta: {
-    name: string;
-    aliases?: string[];
-    permission?: string;
-    category?: string;
-    description?: string;
-  };
-  run: (opts: { sock: any; msg: any; args: string[] }) => Promise<any>;
-}
+// Essa função irá carregar dinamicamente os comandos da pasta de comandos
+export async function loadCommands() {
+  const commandsDir = "/data/data/com.termux/files/home/Uchiha-Bot/src/commands";
+  const dirs = fs.readdirSync(commandsDir).filter(file => fs.statSync(path.join(commandsDir, file)).isDirectory()); // Buscar subpastas
+console.log('Diretório de comandos:', commandsDir);
 
-function findExported(obj: any, keys: string[]) {
-  for (const k of keys) {
-    if (!obj) continue;
-    if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
-  }
-  return undefined;
-}
-
-/**
- * Normaliza qualquer módulo de comando num Command válido:
- * - aceita `export default { meta, run }` (ESM default)
- * - aceita `exports.meta = {...}; exports.run = (...) => {}` (named)
- * - aceita variações de nomes: alias / aliases
- * - transforma run(sock,msg,args) em run({sock,msg,args})
- */
-function normalizeModule(mod: any): Command | null {
-  const raw = mod.default ?? mod;
-
-  const meta =
-    findExported(raw, ["meta", "META", "Meta"]) ||
-    findExported(mod, ["meta", "META", "Meta"]);
-
-  const runFn =
-    findExported(raw, ["run", "Run"]) ||
-    findExported(mod, ["run", "Run"]);
-
-  if (!meta || !runFn || typeof runFn !== "function") return null;
-
-  // Normalize aliases naming (alias / aliases)
-  if (!meta.aliases && meta.alias) {
-    meta.aliases = Array.isArray(meta.alias) ? meta.alias : [meta.alias];
-  }
-
-  const wrappedRun = async ({ sock, msg, args }: { sock: any; msg: any; args: string[] }) => {
-    try {
-      // If original function expects 1 argument (object style) -> call with object
-      if (runFn.length === 1) {
-        return await runFn({ sock, msg, args });
-      }
-      // If it expects 3 or more -> call as (sock, msg, args)
-      return await runFn(sock, msg, args);
-    } catch (err) {
-      // rethrow to handler
-      throw err;
-    }
-  };
-
-  return {
-    meta,
-    run: wrappedRun
-  };
-}
-
-export function loadCommands(dir: string): Map<string, Command> {
-  const commands = new Map<string, Command>();
-
-  if (!fs.existsSync(dir)) {
-    console.warn("Diretório de comandos não existe:", dir);
-    return commands;
-  }
-
-  const files = fs.readdirSync(dir).filter(f =>
-    (f.endsWith(".ts") || f.endsWith(".js")) &&
-    !f.startsWith("_") &&
-    f !== "index.ts"
-  );
+for (const dir of dirs) {
+  const dirPath = path.join(commandsDir, dir);
+  const files = fs.readdirSync(dirPath).filter(file => file.endsWith(".ts"));
 
   for (const file of files) {
-    const filePath = path.join(dir, file);
-    try {
-      // require pode cache; usamos require para compatibilidade com ts-node
-      const mod = require(filePath);
-      const cmd = normalizeModule(mod);
-
-      if (!cmd) {
-        console.warn(`Ignorado (sem meta/run): ${file}`);
-        continue;
-      }
-
-      const name = String(cmd.meta.name || path.basename(file, path.extname(file))).toLowerCase();
-      commands.set(name, cmd);
-
-      // aliases
-      const aliases = cmd.meta.aliases ?? [];
-      if (Array.isArray(aliases)) {
-        for (const a of aliases) {
-          if (!a) continue;
-          commands.set(String(a).toLowerCase(), cmd);
-        }
-      }
-    } catch (e) {
-      console.error("Erro ao carregar comando:", file, e);
+    const commandPath = path.join(dirPath, file);  // Modificado!
+    const commandModule = require(commandPath).default;
+    if (commandModule) {
+      // Aqui você registraria o comando, por exemplo, no bot handler
+      // Supondo que o bot tenha um método de registro como `registerCommand` (isso vai depender do seu código)
+      // bot.registerCommand(commandModule);
     }
   }
-
-  return commands;
 }
+
+}
+
+const command: Command = {
+  meta: {
+    name: "loader",
+    alias: ["reload", "recarregar"],
+    category: "fix",
+    description: "Recarrega todos os comandos do Clã Uchiha",
+  },
+
+  async run(ctx: CommandContext) {
+    const { sock, msg } = ctx;
+    const jid = msg.key?.remoteJid;
+    if (!jid) return;
+
+    // Recarrega os comandos
+    await loadCommands(); // 🔥 religa comandos no handler
+
+    await sock.sendMessage(jid, {
+      text: `🩸 *Ritual de Reconexão Uchiha*
+
+Os selos foram refeitos.
+Os comandos despertaram novamente.
+
+🔥 *“Mesmo após a queda, o Sharingan volta a girar.”*`
+    });
+  }
+};
+
+export default command;

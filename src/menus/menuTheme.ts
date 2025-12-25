@@ -1,32 +1,27 @@
 // src/menus/menuTheme.ts
-export const menuTheme = `
-🌑🔥 *Ｍ Ｅ Ｎ Ｕ Ｄ Ｅ Ｔ Ｅ Ｍ Ａ Ｓ* 🔥🌑
 
-✨ Ative um tema lendário e transforme totalmente a aparência do seu bot!
+export function menuTheme(prefix: string) {
+  return `═════════════════════
+📜˖𝙼𝙴𝙽𝚄-𝚃𝙷𝙴𝙼𝙴 | 𝚄𝚂𝙴 ☞ (${prefix})˖🫟
+═════════════════════
+╭━━━⪩ 𝐓𝐇𝐄𝐌𝐄 𝐁𝐎𝐓 🫟 ⪨━━━
+┃ 1️⃣ ${prefix}𝚝𝚑𝚎𝚖𝚎-𝚞𝚌𝚑𝚒𝚑𝚊
+      └─⪩ 𝐒𝐡𝐚𝐫𝐢𝐧𝐠𝐚𝐧 𝐏𝐚𝐝𝐫ã𝐨 🔥
 
-╔═══════════ ⊹✦⊹ ═══════════╗
-                    *ＴＥＭＡＳ ＵＣＨＩＨＡ*
-╚═══════════ ⊹✦⊹ ═══════════╝
+┃ 2️⃣ ${prefix}𝚝𝚑𝚎𝚖𝚎-𝚜𝚞𝚜𝚊𝚗𝚘𝚘
+      └─⪩ 𝐒𝐮𝐬𝐚𝐧𝐨𝐨 𝐟𝐨𝐫𝐦𝐚 𝐅𝐢𝐧𝐚𝐥 😈
 
-1️⃣ *!tema uchiha*  
-   └─ Sharingan Padrão – Visual clássico e poderoso.
+┃ 3️⃣ ${prefix}𝚝𝚑𝚎𝚖𝚎-𝚊𝚔𝚊𝚝𝚜𝚞𝚔𝚒 
+      └─⪩ 𝐀𝐤𝐚𝐭𝐬𝐮𝐤𝐢 𝐒𝐨𝐦𝐛𝐫𝐢𝐚 🧛🏽‍♂️
 
-2️⃣ *!tema mangekyou*  
-   └─ Mangekyou Supremo – Energia avançada do clã.
+┃ 4️⃣ ${prefix}𝚝𝚑𝚎𝚖𝚎-𝚊𝚖𝚊𝚝𝚎𝚛𝚊𝚜𝚞
+      └─⪩ 𝐂𝐡𝐚𝐦𝐚𝐬 𝐧𝐞𝐠𝐫𝐚𝐬 𝐄𝐭𝐞𝐫𝐧𝐚𝐬 🌫️
 
-3️⃣ *!tema susanoo*  
-   └─ Susanoo Forma Final – Aura imponente e coloração intensa.
+┃ 5️⃣ ${prefix}𝚝𝚑𝚎𝚖𝚎-𝚖𝚊𝚗𝚐𝚎𝚔𝚢𝚘𝚞
+      └─⪩ 𝐌𝐚𝐧𝐠𝐞𝐤𝐲𝐨𝐮 𝐒𝐮𝐩𝐫𝐞𝐦𝐨 ⚡
 
-4️⃣ *!tema akatsuki*  
-   └─ Tema Akatsuki – Estética sombria com nuvens vermelhas.
-
-5️⃣ *!tema uchiha-dark*  
-   └─ Uchiha Dark Minimalista – Estilo premium e limpo.
-
-6️⃣ *!tema amaterasu*  
-   └─ Chamas Negras Eternas – Visual agressivo e feroz.
-
-━━━━━━━━━━━━━━━━━━
-👁️ *Clã Uchiha — O Poder Que Transcende Tudo*
-━━━━━━━━━━━━━━━━━━
-`;
+┃ 6️⃣ ${prefix}𝚝𝚑𝚎𝚖𝚎-𝚞𝚌𝚑𝚒𝚑𝚊𝙳𝚊𝚛𝚔
+   └─⪩ 𝐔𝐜𝐡𝐢𝐡𝐚 𝐃𝐚𝐫𝐤 𝐌𝐢𝐧𝐢𝐦𝐚𝐥𝐢𝐬𝐭𝐚 💥
+╰━━━━━━━━━━━━━━━━━━━━
+✨*『 "Ative um tema lendário e transforme totalmente a aparência do seu bot!" 』*`;
+}
