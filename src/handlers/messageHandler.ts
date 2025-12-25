@@ -13,12 +13,12 @@ export async function handleMessage(
 ) {
   try {
     // ✅ Validações básicas
-    if (!msg.message || ! msg.key?. remoteJid) return;
+    if (!msg.message || !msg.key?.remoteJid) return;
 
-    const jid = msg.key. remoteJid;
+    const jid = msg.key.remoteJid;
     const text = extractMessageText(msg);
 
-    if (! text) return;
+    if (!text) return;
 
     // ✅ Sistema anti (spam, bloqueios)
     const shouldIgnore = await handleAnti(sock, msg);
@@ -53,7 +53,7 @@ export async function handleMessage(
     // ✅ Executar comando com permissões
     const executed = await executeCommand(sock, msg, commandName, args);
 
-    if (! executed) {
+    if (!executed) {
       // Comando não existe
       await sock.sendMessage(jid, {
         text: `❌ *Comando não encontrado*\n\n👁️ Use o prefixo "${prefix}menu" para ver os comandos disponíveis.\n\n🌑 *"Os fracos se perdem na escuridão."*`
@@ -67,7 +67,7 @@ export async function handleMessage(
 /**
  * Extrai texto de qualquer tipo de mensagem
  */
-function extractMessageText(msg: proto. IWebMessageInfo): string | null {
+function extractMessageText(msg: proto.IWebMessageInfo): string | null {
   const message = msg.message;
   if (!message) return null;
 
@@ -75,8 +75,8 @@ function extractMessageText(msg: proto. IWebMessageInfo): string | null {
     return message.conversation;
   }
 
-  if (message.extendedTextMessage?. text) {
-    return message. extendedTextMessage.text;
+  if (message.extendedTextMessage?.text) {
+    return message.extendedTextMessage.text;
   }
 
   return null;
@@ -86,12 +86,12 @@ function extractMessageText(msg: proto. IWebMessageInfo): string | null {
  * Registra o handler na conexão
  */
 export function registerMessageHandler(sock: WASocket) {
-  sock.ev.on("messages. upsert", async ({ messages }) => {
+  sock.ev.on("messages.upsert", async ({ messages }) => {
     for (const msg of messages) {
       // Ignorar mensagens do próprio bot
-      if (msg. key?.fromMe) continue;
+      if (msg.key?.fromMe) continue;
 
       await handleMessage(sock, msg);
     }
   });
-  }
+}
