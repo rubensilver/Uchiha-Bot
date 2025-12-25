@@ -14,11 +14,10 @@ import readline from "readline";
 import colors from "colors";
 
 // (APENAS A PARTE RELEVANTE - resto mantém como está)
-
 import { loadCommands } from "./commands/loader";
-import { registerMessageHandler } from "./handlers/messageHandler"; // ✅ MUDAR AQUI
-import { BOT_NUMBER } from "./config/settings";
-import { AntiLigarState } from "./state/AntiLigarState";
+import { registerMessageHandler } from "./handlers/messageHandler";  // Corrigir caminho
+import { BOT_NUMBER } from "./config/settings";  // Corrigir caminho
+import { AntiLigarState } from "./state/AntiLigarState";  // Corrigir caminho
 
 /* ================== READLINE ================== */
 const rl = readline.createInterface({
@@ -31,10 +30,8 @@ const question = (text: string): Promise<string> =>
 
 /* ================== CONNECT ================== */
 export async function connect(): Promise<WASocket> {
-  // 🔥 CARREGA COMANDOS UMA ÚNICA VEZ
-  loadCommands();
-}
-let reconnecting = false;
+  loadCommands();  // 🔥 CARREGA COMANDOS UMA ÚNICA VEZ
+  let reconnecting = false;
 
   const authDir = path.resolve("auth");
 
@@ -48,11 +45,9 @@ let reconnecting = false;
   const sock = makeWASocket({
     version,
     auth: state,
-
     emitOwnEvents: false,
     syncFullHistory: false,
     markOnlineOnConnect: false,
-
     logger: P({ level: "silent" }),
     printQRInTerminal: false,
     browser: Browsers.macOS("Safari")
@@ -61,7 +56,7 @@ let reconnecting = false;
   /* ================== CREDS ================== */
   sock.ev.on("creds.update", saveCreds);
 
-  /* ================== ANTI-LIGAR (LÓGICA REAL) ================== */
+  /* ================== ANTI-LIGAR ================== */
   sock.ev.on("call", async (calls) => {
     if (!AntiLigarState.enabled) return;
 
@@ -70,11 +65,9 @@ let reconnecting = false;
 
       try {
         await sock.rejectCall(call.id, call.from);
-
         await sock.sendMessage(call.from, {
           text: `🛡️ *Ligação bloqueada*
-
-🔥 *“O Clã Uchiha não atende chamadas.”*`
+          🔥 *“O Clã Uchiha não atende chamadas.”*`
         });
       } catch {}
     }
