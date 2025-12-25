@@ -1,11 +1,12 @@
+// src/core/commandHandler.ts
 import { WASocket, proto } from "@whiskeysockets/baileys";
 import { Command, CommandContext } from "../types/Command";
-import { PermissionSystem, PermissionLevel } from "./PermissionSystem";
+import { PermissionSystem } from "./PermissionSystem";
 
 const commandRegistry = new Map<string, Command>();
 
 /**
- * Registra um comando
+ * Registra um comando no registry (name + aliases)
  */
 export function registerCommand(cmd: Command) {
   if (!cmd.meta.name) {
@@ -13,21 +14,23 @@ export function registerCommand(cmd: Command) {
     return;
   }
 
-  const name = cmd.meta.name. toLowerCase();
+  const name = cmd.meta.name.toLowerCase();
   commandRegistry.set(name, cmd);
 
-  // Registrar aliases
-  if (cmd.meta.alias && Array.isArray(cmd.meta. alias)) {
+  // Registrar aliases também
+  if (cmd.meta.alias && Array.isArray(cmd.meta.alias)) {
     cmd.meta.alias.forEach((alias) => {
       commandRegistry.set(alias.toLowerCase(), cmd);
     });
   }
 
-  console.log(`✅ Comando registrado: ${cmd.meta.name} (${cmd.meta.category || "sem categoria"})`);
+  console.log(`✅ Comando registrado: ${cmd.meta.name} (${cmd.meta.category ?? "sem categoria"})`);
 }
 
 /**
- * Executa um comando com validação de permissões
+ * Executa um comando pelo nome — o handler valida permissões aqui.
+ * O nível de permissão é inferido automaticamente a partir de cmd.meta.category,
+ * que é preenchido pelo loader (index.ts) com base na pasta do ficheiro.
  */
 export async function executeCommand(
   sock: WASocket,
@@ -35,48 +38,47 @@ export async function executeCommand(
   commandName: string,
   args: string[]
 ): Promise<boolean> {
-  const cmd = commandRegistry.get(commandName. toLowerCase());
+  const cmd = commandRegistry.get(commandName.toLowerCase());
 
   if (!cmd) {
     return false;
   }
 
   try {
-    // Definir nível de permissão requerido baseado na categoria
-    let requiredLevel = PermissionLevel.USER;
-    
-    if (cmd.meta.category === "admin") {
-      requiredLevel = PermissionLevel.ADMIN;
-    } else if (cmd. meta.category === "owner") {
-      requiredLevel = PermissionLevel.OWNER;
-    }
+    // Inferir nível requerido pela categoria do comando (não do ficheiro)
+    const category = (cmd.meta.category || "").toLowerCase();
 
-    // Validar permissão
-    const hasPermission = await PermissionSystem.checkPermission(sock, msg, requiredLevel);
+    // Mapeamento: pasta 'owner' => owner, 'admin' => admin, qualquer outro => user
+    let required: "owner" | "admin" | "user" = "user";
+    if (category === "owner") required = "owner";
+    else if (category === "admin" || category.startsWith("adm")) required = "admin";
 
-    if (!hasPermission) {
+    // Verifica permissões via PermissionSystem (tudo centralizado no handler)
+    const allowed = await PermissionSystem.checkPermission(sock, msg, required);
+
+    if (!allowed) {
       const jid = msg.key?.remoteJid;
       if (jid) {
-        const permissionName = requiredLevel === PermissionLevel. OWNER ? "Dono" : "Admin";
+        const permissionName = required === "owner" ? "Dono" : "Admin";
         await sock.sendMessage(jid, {
           text: `🔒 *Acesso Negado*\n\n👁️‍🗨️ Apenas ${permissionName} do Clã Uchiha pode usar este comando.\n\n🩸 *"O poder sem autoridade é fraqueza."*`
         });
       }
-      return true; // Comando foi "encontrado", mas sem permissão
+      // retornamos true porque o comando foi reconhecido, mas não executado por permissão
+      return true;
     }
 
-    // Criar contexto
     const ctx: CommandContext = {
       sock,
       msg,
       args
     };
 
-    // Executar
+    // Executa o comando (os ficheiros de comando não precisam declarar permissões)
     await cmd.run(ctx);
     return true;
-  } catch (error) {
-    console.error(`❌ Erro ao executar comando ${commandName}:`, error);
+  } catch (err) {
+    console.error(`❌ Erro ao executar comando ${commandName}:`, err);
     const jid = msg.key?.remoteJid;
     if (jid) {
       await sock.sendMessage(jid, {
@@ -88,23 +90,12 @@ export async function executeCommand(
 }
 
 /**
- * Lista comandos por categoria
+ * Listar comandos (opcional)
  */
-export function listCommandsByCategory(category?:  string): Command[] {
+export function listCommands(): Command[] {
   const unique = new Map<string, Command>();
   commandRegistry.forEach((cmd) => {
-    if (! unique.has(cmd.meta.name)) {
-      if (! category || cmd.meta.category === category) {
-        unique.set(cmd.meta.name, cmd);
-      }
-    }
+    if (!unique.has(cmd.meta.name)) unique.set(cmd.meta.name, cmd);
   });
   return Array.from(unique.values());
-}
-
-/**
- * Obtém um comando
- */
-export function getCommand(name: string): Command | undefined {
-  return commandRegistry.get(name.toLowerCase());
 }
