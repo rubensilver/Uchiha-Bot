@@ -1,101 +1,29 @@
 // src/core/commandHandler.ts
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { Command, CommandContext } from "../types/Command";
-import { PermissionSystem } from "./PermissionSystem";
-
-const commandRegistry = new Map<string, Command>();
+import { executeCommand } from "../commands/commandHandler";
+import { PrefixManager } from "../core/PrefixManager";
 
 /**
- * Registra um comando no registry (name + aliases)
+ * Função que o messenger.ts já chama: handleCommand(sock, msg, body)
+ * Ela parseia o body (usa o PrefixManager) e delega para commands/commandHandler.executeCommand
  */
-export function registerCommand(cmd: Command) {
-  if (!cmd.meta.name) {
-    console.warn("⚠️ Comando sem nome ignorado");
-    return;
-  }
-
-  const name = cmd.meta.name.toLowerCase();
-  commandRegistry.set(name, cmd);
-
-  // Registrar aliases também
-  if (cmd.meta.alias && Array.isArray(cmd.meta.alias)) {
-    cmd.meta.alias.forEach((alias) => {
-      commandRegistry.set(alias.toLowerCase(), cmd);
-    });
-  }
-
-  console.log(`✅ Comando registrado: ${cmd.meta.name} (${cmd.meta.category ?? "sem categoria"})`);
-}
-
-/**
- * Executa um comando pelo nome — o handler valida permissões aqui.
- * O nível de permissão é inferido automaticamente a partir de cmd.meta.category,
- * que é preenchido pelo loader (index.ts) com base na pasta do ficheiro.
- */
-export async function executeCommand(
-  sock: WASocket,
-  msg: proto.IWebMessageInfo,
-  commandName: string,
-  args: string[]
-): Promise<boolean> {
-  const cmd = commandRegistry.get(commandName.toLowerCase());
-
-  if (!cmd) {
-    return false;
-  }
-
+export async function handleCommand(sock: WASocket, msg: proto.IWebMessageInfo, body: string) {
   try {
-    // Inferir nível requerido pela categoria do comando (não do ficheiro)
-    const category = (cmd.meta.category || "").toLowerCase();
+    const prefix = PrefixManager.getPrefix();
+    const text = body.trim();
+    const noPrefix = text.startsWith(prefix) ? text.slice(prefix.length) : text;
+    const parts = noPrefix.split(/\s+/);
+    const commandName = parts[0].toLowerCase();
+    const args = parts.slice(1);
 
-    // Mapeamento: pasta 'owner' => owner, 'admin' => admin, qualquer outro => user
-    let required: "owner" | "admin" | "user" = "user";
-    if (category === "owner") required = "owner";
-    else if (category === "admin" || category.startsWith("adm")) required = "admin";
-
-    // Verifica permissões via PermissionSystem (tudo centralizado no handler)
-    const allowed = await PermissionSystem.checkPermission(sock, msg, required);
-
-    if (!allowed) {
-      const jid = msg.key?.remoteJid;
-      if (jid) {
-        const permissionName = required === "owner" ? "Dono" : "Admin";
-        await sock.sendMessage(jid, {
-          text: `🔒 *Acesso Negado*\n\n👁️‍🗨️ Apenas ${permissionName} do Clã Uchiha pode usar este comando.\n\n🩸 *"O poder sem autoridade é fraqueza."*`
-        });
-      }
-      // retornamos true porque o comando foi reconhecido, mas não executado por permissão
-      return true;
-    }
-
-    const ctx: CommandContext = {
-      sock,
-      msg,
-      args
-    };
-
-    // Executa o comando (os ficheiros de comando não precisam declarar permissões)
-    await cmd.run(ctx);
-    return true;
+    await executeCommand(sock, msg, commandName, args);
   } catch (err) {
-    console.error(`❌ Erro ao executar comando ${commandName}:`, err);
+    console.error("❌ Erro em core/handleCommand:", err);
     const jid = msg.key?.remoteJid;
     if (jid) {
-      await sock.sendMessage(jid, {
-        text: `⚠️ *Erro ao executar comando*\n\n🌑 *"Um erro perturbou o Sharingan."*`
-      });
+      try {
+        await sock.sendMessage(jid, { text: `⚠️ *Erro interno do handler*\n\n🌑 *"O Sharingan encontra falhas, informe o dono."*` });
+      } catch {}
     }
-    return true;
   }
-}
-
-/**
- * Listar comandos (opcional)
- */
-export function listCommands(): Command[] {
-  const unique = new Map<string, Command>();
-  commandRegistry.forEach((cmd) => {
-    if (!unique.has(cmd.meta.name)) unique.set(cmd.meta.name, cmd);
-  });
-  return Array.from(unique.values());
 }
