@@ -30,7 +30,8 @@ jobs:
         run: npm run build
 
       - name: Build Docker image
-        run: docker build -t my-image-name:latest .
+        # CORRIGIDO: Adicionado o nome de usuário do Docker Hub (via secret) ao nome da imagem.
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/my-image-name:latest .
 
       - name: Log in to Docker Hub
         if: github.event_name == 'push'
@@ -41,7 +42,8 @@ jobs:
 
       - name: Push Docker image
         if: github.event_name == 'push'
-        run: docker push my-image-name:latest
+        # CORRIGIDO: O comando push agora usa o nome completo e correto da imagem.
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/my-image-name:latest
 
       - name: Deploy to Railway
         if: github.event_name == 'push'
@@ -52,3 +54,5 @@ jobs:
           -H "Authorization: Bearer $RAILWAY_API_KEY" \
           -H "Content-Type: application/json" \
           -d '{"projectId": "${{ secrets.RAILWAY_PROJECT_ID }}"}'
+
+
