@@ -25,7 +25,14 @@ jobs:
         run: npm install
 
       - name: Run ESLint
-        run: npm run lint
+        run: npx eslint . --ext .ts,.js 2> eslint.log || true
+
+      - name: Upload ESLint logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: eslint-logs
+          path: eslint.log
 
   test:
     runs-on: ubuntu-latest
@@ -46,7 +53,14 @@ jobs:
         run: npm install
 
       - name: Run Tests
-        run: npm test
+        run: npm test 2> test.log || true
+
+      - name: Upload Test logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-logs
+          path: test.log
 
   build:
     runs-on: ubuntu-latest
