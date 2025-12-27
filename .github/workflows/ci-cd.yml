@@ -24,27 +24,47 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # 3️⃣ Instalação limpa das dependências
-      - name: Clean Install Dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+      # 3️⃣ Cache de node_modules
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 4️⃣ Instalação limpa das dependências
+      - name: Install Dependencies
+        run: npm ci
         shell: bash
 
-      # 4️⃣ Rodar ESLint
+      # 5️⃣ Rodar ESLint e salvar logs
       - name: Run ESLint
-        run: npm run lint
+        run: |
+          npx eslint . --ext .ts,.js 2> eslint.log || true
         shell: bash
-        working-directory: ./
 
-      # 5️⃣ Rodar Tests
+      - name: Upload ESLint logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: eslint-logs
+          path: eslint.log
+
+      # 6️⃣ Rodar Tests e salvar logs
       - name: Run Tests
-        run: npm test
+        run: |
+          npm test 2> test.log || true
         shell: bash
-        working-directory: ./
 
-      # 6️⃣ Build do projeto
+      - name: Upload Test logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-logs
+          path: test.log
+
+      # 7️⃣ Build do projeto
       - name: Build Project
         run: npm run build
         shell: bash
-        working-directory: ./
