@@ -13,6 +13,7 @@
   "type": "commonjs",
   "scripts": {
     "test": "echo \"No tests available\"",
+    "lint": "eslint .",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node build/index.js"
