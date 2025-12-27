@@ -24,7 +24,8 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install 
+        cache: 'npm'
 
       - name: Build application
         run: npm run build
