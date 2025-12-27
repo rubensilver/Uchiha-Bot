@@ -1,8 +1,6 @@
+// src/start.ts
 import { connect } from "./connect";
 
-/**
- * Inicia o bot chamando a função de conexão.
- */
 export async function startBot() {
   try {
     await connect();

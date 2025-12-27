@@ -1,5 +1,7 @@
 // src/core/commandHandler.ts
 import { WASocket, proto } from "@whiskeysockets/baileys";
+import { getUserName } from "../utils/getUserName";
+import { getPermissions } from "../utils/getPermissions";
 import { Command, CommandContext } from "../types/Command";
 import { PermissionSystem } from "./PermissionSystem";
 
@@ -53,8 +55,12 @@ export async function executeCommand(
     if (category === "owner") required = "owner";
     else if (category === "admin" || category.startsWith("adm")) required = "admin";
 
-    // Verifica permissões via PermissionSystem (tudo centralizado no handler)
-    const allowed = await PermissionSystem.checkPermission(sock, msg, required);
+// Verifica permissões via PermissionSystem (tudo centralizado no handler)
+const allowed = await PermissionSystem.checkPermission(
+  sock,
+  msg,
+  required
+);
 
     if (!allowed) {
       const jid = msg.key?.remoteJid;
@@ -68,11 +74,32 @@ export async function executeCommand(
       return true;
     }
 
-    const ctx: CommandContext = {
-      sock,
-      msg,
-      args
-    };
+    const jid = msg.key!.remoteJid!;
+const user = msg.key!.participant || jid;
+
+const { isAdmin, isOwner } = await getPermissions(sock, msg);
+
+const ctx: CommandContext = {
+  sock,
+  msg,
+  args,
+
+  userJid: user,
+  userName: getUserName(msg),
+  isAdmin,
+  isOwner,
+
+  reply: async (text: string) => {
+    await sock.sendMessage(jid, { text });
+  },
+
+  mention: async (text: string) => {
+    await sock.sendMessage(jid, {
+      text,
+      mentions: [user],
+    });
+  },
+};
 
     // Executa o comando (os ficheiros de comando não precisam declarar permissões)
     await cmd.run(ctx);

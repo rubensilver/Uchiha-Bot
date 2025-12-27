@@ -1,10 +1,10 @@
-import { WASocket } from "@whiskeysockets/baileys";
+import type { CommandContext } from "../types/Command";
 
 type ParseParams = {
   text: string;
   jid: string;
   user?: string;
-  sock: WASocket;
+  sock: CommandContext["sock"],
 };
 
 export async function parseLegenda({

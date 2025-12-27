@@ -4,17 +4,17 @@ import * as fs from "fs";
 
 // Essa função irá carregar dinamicamente os comandos da pasta de comandos
 export async function loadCommands() {
-  const commandsDir = "/data/data/com.termux/files/home/Uchiha-Bot/src/commands";
+  const commandsDir = __dirname;
   const dirs = fs.readdirSync(commandsDir).filter(file => fs.statSync(path.join(commandsDir, file)).isDirectory()); // Buscar subpastas
 console.log('Diretório de comandos:', commandsDir);
 
 for (const dir of dirs) {
   const dirPath = path.join(commandsDir, dir);
-  const files = fs.readdirSync(dirPath).filter(file => file.endsWith(".ts"));
+  const files = fs.readdirSync(dirPath).filter(file => file.endsWith(".js"));
 
   for (const file of files) {
-    const commandPath = path.join(dirPath, file);  // Modificado!
-    const commandModule = require(commandPath).default;
+    const commandPath = path.join(dirPath, file);
+const commandModule = require(commandPath).default;
     if (commandModule) {
       // Aqui você registraria o comando, por exemplo, no bot handler
       // Supondo que o bot tenha um método de registro como `registerCommand` (isso vai depender do seu código)

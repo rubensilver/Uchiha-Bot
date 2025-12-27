@@ -57,14 +57,18 @@ function detectFake(msg: proto.IWebMessageInfo): boolean {
 
 /**
  * Sistema Anti principal
+ * RETORNA:
+ * true  -> mensagem foi tratada (deve ignorar no messenger)
+ * false -> nada aconteceu
  */
 export async function handleAnti(
   sock: WASocket,
   msg: proto.IWebMessageInfo
-) {
-  if (!msg.key || !msg.key.remoteJid) return;
-  const jid = msg.key.remoteJid!;
-  const user = msg.key?.participant || jid;
+): Promise<boolean> {
+  if (!msg.key || !msg.key.remoteJid) return false;
+
+  const jid = msg.key.remoteJid;
+  const user = msg.key.participant || jid;
 
   // 1️⃣ Detecta infração normal
   let anti = detectAnti(msg);
@@ -74,18 +78,17 @@ export async function handleAnti(
     anti = "anti-fake";
   }
 
-  if (!anti) return;
+  if (!anti) return false;
 
   // 3️⃣ Verifica se o anti está ligado
-  if (!AntiStore.isEnabled(jid, anti)) return;
+  if (!AntiStore.isEnabled(jid, anti)) return false;
 
   // 4️⃣ Apaga mensagem
-  await sock.sendMessage(jid, { delete: msg.key! });
+  await sock.sendMessage(jid, { delete: msg.key });
 
   // 5️⃣ Aplica warn
   const warns = AntiStore.addWarn(jid, anti, user);
 
-  // ⚠️ fallback seguro (até ligar maxWarn)
   const maxWarn = AntiStore.getMaxWarn
     ? AntiStore.getMaxWarn(jid)
     : 2;
@@ -101,7 +104,8 @@ export async function handleAnti(
 👁️ O usuário foi banido após ultrapassar os limites.
 🩸 *“A paciência de um Uchiha não é infinita.”*`
     });
-    return;
+
+    return true;
   }
 
   // 7️⃣ Aviso
@@ -113,4 +117,6 @@ export async function handleAnti(
 
 🌑 *“Observe. Aprenda. Não repita.”*`
   });
+
+  return true;
 }

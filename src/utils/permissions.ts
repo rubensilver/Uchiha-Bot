@@ -1,8 +1,8 @@
-import { WASocket, proto } from "@whiskeysockets/baileys";
+import type { CommandContext } from "../types/Command";
 
 export async function checkAdmin(
-  sock: WASocket,
-  msg: proto.IWebMessageInfo
+  sock: CommandContext["sock"],
+  msg: CommandContext["msg"]
 ) {
   const jid = msg.key?.remoteJid;
   if (!jid || !jid.endsWith("@g.us")) {
@@ -19,8 +19,8 @@ export async function checkAdmin(
   const botId = sock.user!.id;
 
   const admins = metadata.participants
-    .filter(p => p.admin) // 👈 qualquer admin
-    .map(p => p.id);
+    .filter((p: { admin?: string | null }) => p.admin) // 👈 qualquer admin
+    .map((p: { id: string }) => p.id);
 
   return {
     isGroup: true,

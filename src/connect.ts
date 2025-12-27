@@ -1,10 +1,10 @@
-// src/connect.ts
 import makeWASocket, {
+  useMultiFileAuthState,
+  fetchLatestBaileysVersion,
   Browsers,
   DisconnectReason,
-  fetchLatestBaileysVersion,
-  useMultiFileAuthState,
-  WASocket
+  WASocket,
+  ConnectionState
 } from "@whiskeysockets/baileys";
 
 import P from "pino";
@@ -13,149 +13,101 @@ import path from "path";
 import readline from "readline";
 import colors from "colors";
 
-// (APENAS A PARTE RELEVANTE - resto mantém como está)
 import { loadCommands } from "./commands/loader";
-import { registerMessageHandler } from "./handlers/messageHandler";  // Corrigir caminho
-import { BOT_NUMBER } from "./config/settings";  // Corrigir caminho
-import { AntiLigarState } from "./state/AntiLigarState";  // Corrigir caminho
+import { registerMessageHandler } from "./messenger";
+import { BOT_NUMBER } from "./config/settings";
+import { registerAntiLigar } from "./anti/antiLigar";
+import { debug } from "./utils/debug";
 
 /* ================== READLINE ================== */
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
 const question = (text: string): Promise<string> =>
-  new Promise(resolve => rl.question(text, resolve));
+  new Promise((resolve) => rl.question(text, resolve));
 
 /* ================== CONNECT ================== */
 export async function connect(): Promise<WASocket> {
-  loadCommands();  // 🔥 CARREGA COMANDOS UMA ÚNICA VEZ
-  let reconnecting = false;
-
   const authDir = path.resolve("auth");
 
-  if (!fs.existsSync(authDir)) {
-    fs.mkdirSync(authDir, { recursive: true });
-  }
-
+  // 1. Verifica se a sessão existe, se for inválida (erro anterior), limpa para forçar novo login
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
   const { version } = await fetchLatestBaileysVersion();
+
+  debug("Criando socket WhatsApp");
 
   const sock = makeWASocket({
     version,
     auth: state,
-    emitOwnEvents: false,
-    syncFullHistory: false,
-    markOnlineOnConnect: false,
     logger: P({ level: "silent" }),
     printQRInTerminal: false,
-    browser: Browsers.macOS("Safari")
+    // Importante: Browser deve ser este formato para Pairing Code funcionar sempre
+    browser: ["Ubuntu", "Chrome", "20.0.04"],
   });
 
-  /* ================== CREDS ================== */
-  sock.ev.on("creds.update", saveCreds);
-
-  /* ================== ANTI-LIGAR ================== */
-  sock.ev.on("call", async (calls) => {
-    if (!AntiLigarState.enabled) return;
-
-    for (const call of calls) {
-      if (call.status !== "offer") continue;
-
-      try {
-        await sock.rejectCall(call.id, call.from);
-        await sock.sendMessage(call.from, {
-          text: `🛡️ *Ligação bloqueada*
-          🔥 *“O Clã Uchiha não atende chamadas.”*`
-        });
-      } catch {}
-    }
-  });
-
-  /* ================== MENSAGENS ================== */
-  registerMessageHandler(sock);
-
-  /* ================== PAIRING ================== */
+  // 2. SOLICITAÇÃO DE PAIRING CODE (Fora do connection.update)
+  // Se não estiver registrado, ele pede o código imediatamente
   if (!sock.authState.creds.registered) {
+    let number = BOT_NUMBER?.replace(/\D/g, "");
+
+    if (!number) {
+      number = await question(
+        colors.yellow("\nDigite seu número com DDD (ex: 5593999999999): ")
+      );
+      number = number.replace(/\D/g, "");
+    }
+
+    // Pequeno delay para garantir estabilidade do socket
     setTimeout(async () => {
       try {
-        console.log(
-          colors.cyan("\nNenhuma sessão encontrada. Vamos conectar seu número.\n")
-        );
-
-        let number = BOT_NUMBER;
-
-        if (!number) {
-          number = await question(
-            colors.yellow("Digite seu número (ex: 5593999999999): ")
-          );
-        }
-
-        number = number.replace(/\D/g, "");
-
-        console.log(colors.gray("\nGerando código de pareamento...\n"));
-
         const code = await sock.requestPairingCode(number);
-
-        console.log(
-          colors.cyan(
-            `📲 Seu código de pareamento:\n\n${colors.white(code)}\n`
-          )
-        );
-
-        rl.close();
+        console.log(colors.cyan("\n--- CONEXÃO VIA CÓDIGO ---"));
+        console.log(colors.green(`📲 Seu código de pareamento é: `), colors.white.bold(code));
+        console.log(colors.cyan("---------------------------\n"));
       } catch (err) {
-        console.log(
-          colors.red("\n❌ Erro ao gerar código de pareamento:\n"),
-          err
-        );
+        console.error(colors.red("❌ Erro ao gerar código de pareamento:"), err);
       }
-    }, 1200);
+    }, 3000);
   }
 
-  /* ================== CONEXÃO ================== */
-  sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
-    if (connection === "open") {
-      reconnecting = false;
-      console.log(colors.green("〔 BOT CONECTADO COM SUCESSO 〕"));
-    }
+  sock.ev.on("creds.update", saveCreds);
 
-    if (connection === "close") {
-      const reason =
-        (lastDisconnect?.error as any)?.output?.statusCode;
+  let systemsLoaded = false;
 
-      if (reason && ![515].includes(reason)) {
-        console.log(
-          colors.yellow(`[CONEXÃO FECHADA] Motivo: ${reason}`)
-        );
+  sock.ev.on(
+    "connection.update",
+    async ({ connection, lastDisconnect }: Partial<ConnectionState>) => {
+      const status = (lastDisconnect?.error as any)?.output?.statusCode;
+
+      if (connection === "open") {
+        console.log(colors.green("✅ Conexão estabelecida com sucesso!"));
+        
+        if (!systemsLoaded) {
+          systemsLoaded = true;
+          loadCommands();
+          registerMessageHandler(sock);
+          registerAntiLigar(sock);
+          debug("Sistemas carregados");
+        }
       }
 
-      if (reason === DisconnectReason.loggedOut) {
-        console.log(
-          colors.red("❌ Sessão desconectada. Limpando auth...")
-        );
+      if (connection === "close") {
+        console.log(colors.red(`❌ Conexão fechada. Motivo: ${status}`));
 
-        fs.rmSync(authDir, { recursive: true, force: true });
-
-        console.log(
-          colors.red("⏳ Aguardando 5 segundos antes de reconectar...")
-        );
-
-        setTimeout(() => connect(), 5000);
-        return;
-      }
-
-      if (!reconnecting) {
-        reconnecting = true;
-
-        setTimeout(() => {
-          reconnecting = false;
-          connect();
-        }, 2500);
+        // 3. SE O ERRO FOR 401 (Sessão expirada/inválida), APAGA A PASTA E REINICIA
+        if (status === DisconnectReason.loggedOut || status === 401) {
+          console.log(colors.yellow("Sessão inválida. Limpando cache e reiniciando..."));
+          fs.rmSync(authDir, { recursive: true, force: true });
+          setTimeout(() => connect(), 2000);
+        } else {
+          // Outros erros: Apenas tenta reconectar
+          setTimeout(() => connect(), 3000);
+        }
       }
     }
-  });
+  );
 
   return sock;
 }

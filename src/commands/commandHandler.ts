@@ -1,6 +1,8 @@
 // src/commands/commandHandler.ts
 
 import { WASocket, proto } from "@whiskeysockets/baileys";
+import { getPermissions } from "../utils/getPermissions";
+import { getUserName } from "../utils/getUserName";
 import { Command } from "../types/Command";
 
 const commands = new Map<string, Command>();
@@ -35,5 +37,30 @@ export async function handleCommand(
   const cmd = commands.get(name);
   if (!cmd) return;
 
-  await cmd.run({ sock, msg, args });
+  const jid = msg.key!.remoteJid!;
+const user = msg.key!.participant || jid;
+
+const { isAdmin, isOwner } = await getPermissions(sock, msg);
+
+await cmd.run({
+  sock,
+  msg,
+  args,
+
+  userJid: user,
+  userName: getUserName(msg),
+  isAdmin,
+  isOwner,
+
+  reply: async (text: string) => {
+    await sock.sendMessage(jid, { text });
+  },
+
+  mention: async (text: string) => {
+    await sock.sendMessage(jid, {
+      text,
+      mentions: [user],
+    });
+  },
+});
 }

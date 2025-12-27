@@ -5,6 +5,13 @@ export interface CommandContext {
   sock: WASocket;
   msg: proto.IWebMessageInfo;
   args: string[];
+  userJid: string;
+  userName: string;
+  isAdmin: boolean;
+  isOwner: boolean;
+
+  reply: (text: string) => Promise<void>;
+  mention: (text: string) => Promise<void>;
 }
 
 export interface Command {

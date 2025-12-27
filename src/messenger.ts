@@ -1,10 +1,13 @@
+// src/messenger.ts
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { executeCommand, listCommands } from "../core/commandHandler";
-import { CommandContext } from "./types/Command"; // Corrigido o caminho relativo
-import { handleMenu } from "../menus/menuHandler";
-import { PrefixManager } from "./PrefixManager";
-import { handleAnti } from "../anti/AntiSystem";
-import { OWNER } from "../config/conf";
+import { getUserName } from "./utils/getUserName";
+import { getPermissions } from "./utils/getPermissions";
+import { executeCommand } from "./core/commandHandler";
+import { CommandContext } from "./types/Command";
+import { handleMenu } from "./menus/menuHandler";
+import { PrefixManager } from "./core/PrefixManager";
+import { handleAnti } from "./anti/AntiSystem";
+import { OWNER } from "./config/conf";
 
 /**
  * Handler principal de mensagens
@@ -14,25 +17,22 @@ export async function handleMessage(
   msg: proto.IWebMessageInfo
 ) {
   try {
-    // Verificações básicas
-    if (!msg.message || !msg.key?.remoteJid) return; // Corrigido o espaço extra
+    if (!msg.message || !msg.key?.remoteJid) return;
+if (msg.key?.fromMe) return;
+if (msg.key?.remoteJid === "status@broadcast") return;
 
-    const isOwner = isMessageFromOwner(msg);
-
-    // Extrair texto da mensagem
     const text = extractMessageText(msg);
     if (!text) return;
 
-    // Aplicar sistema anti (spam, etc)
+const { isAdmin, isOwner } = await getPermissions(sock, msg);
+
+    // AntiSystem
     if (!isOwner) {
       const shouldIgnore = await handleAnti(sock, msg);
       if (shouldIgnore) return;
     }
 
-    // Obter prefix
     const prefix = PrefixManager.getPrefix();
-
-    // Verificar se começa com prefix
     if (!text.startsWith(prefix)) return;
 
     const body = text.trim();
@@ -46,28 +46,46 @@ export async function handleMessage(
       .split(/\s+/)
       .slice(1);
 
-    // Tentar tratar como menu primeiro
     const menuHandled = await handleMenu(commandName, {
       sock,
       msg,
       prefix,
     });
-
     if (menuHandled) return;
 
-    // Criar contexto do comando
-    const ctx: CommandContext = {
-      sock,
-      msg,
-      args,
-    };
+    const jid = msg.key!.remoteJid!;
+const user = msg.key!.participant || jid;
 
-    // Executar comando
-    const executed = await executeCommand(commandName, ctx);
 
+const ctx: CommandContext = {
+  sock,
+  msg,
+  args,
+
+  userJid: user,
+  userName: getUserName(msg),
+  isAdmin,
+  isOwner,
+
+  reply: async (text: string) => {
+    await sock.sendMessage(jid, { text });
+  },
+
+  mention: async (text: string) => {
+    await sock.sendMessage(jid, {
+      text,
+      mentions: [user],
+    });
+  },
+};
+
+const executed = await executeCommand(sock, msg, commandName, args);
     if (!executed) {
-      // Responder que comando não foi encontrado (opcional)
-      await sendReply(sock, msg, `❌ Comando \`${commandName}\` não encontrado!`);
+      await sendReply(
+        sock,
+        msg,
+        `❌ Comando \`${commandName}\` não encontrado!`
+      );
     }
   } catch (error) {
     console.error("❌ Erro ao processar mensagem:", error);
@@ -75,21 +93,14 @@ export async function handleMessage(
 }
 
 /**
- * Extrai o texto de uma mensagem (suporta vários tipos)
+ * Extrai o texto de uma mensagem
  */
 function extractMessageText(msg: proto.IWebMessageInfo): string | null {
   const message = msg.message;
   if (!message) return null;
 
-  // Mensagem de texto normal
-  if (message.conversation) {
-    return message.conversation;
-  }
-
-  // Mensagem de texto estendida
-  if (message.extendedTextMessage?.text) { // Corrigido o espaço extra
-    return message.extendedTextMessage.text;
-  }
+  if (message.conversation) return message.conversation;
+  if (message.extendedTextMessage?.text) return message.extendedTextMessage.text;
 
   return null;
 }
@@ -98,33 +109,34 @@ function extractMessageText(msg: proto.IWebMessageInfo): string | null {
  * Verifica se a mensagem é do dono
  */
 function isMessageFromOwner(msg: proto.IWebMessageInfo): boolean {
-  const sender = msg.key?.remoteJid || ""; // Corrigido o espaço extra
-  return OWNER.numbers.some((num) => sender.includes(num));
+  const sender = msg.key?.remoteJid || "";
+  return OWNER.numbers.some((num: string) => sender.includes(num));
 }
 
 /**
  * Responder uma mensagem
  */
 export async function sendReply(
-  sock: WASocket,
-  msg: proto.IWebMessageInfo,
+  sock: CommandContext["sock"],
+  msg: CommandContext["msg"],
   text: string
 ) {
   const jid = msg.key?.remoteJid;
   if (!jid) return;
 
-  await sock.sendMessage(jid, {
-    text,
-  });
+  await sock.sendMessage(jid, { text });
 }
 
 /**
  * Registrar handler de mensagens
  */
 export function registerMessageHandler(sock: WASocket) {
-  sock.ev.on("messages.upsert", async ({ messages }) => { // Corrigido o espaço extra
-    for (const msg of messages) {
-      await handleMessage(sock, msg);
+  sock.ev.on(
+    "messages.upsert",
+    async (update: { messages: proto.IWebMessageInfo[] }) => {
+      for (const msg of update.messages) {
+        await handleMessage(sock, msg);
+      }
     }
-  });
+  );
 }

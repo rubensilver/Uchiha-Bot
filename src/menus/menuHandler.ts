@@ -401,7 +401,10 @@ export async function handleMenu(
   const data = now.toLocaleDateString("pt-BR");
 
   // Nome amigável do usuário
-  const usuario = msg.pushName || "Usuário";
+  const usuario =
+  msg.key?.participant?.split("@")[0] ??
+  msg.key?.participant?.split("@")[0] ??
+  "Usuário";
 
   // Monta o menu automaticamente
   const corpo = menuFn(prefix)

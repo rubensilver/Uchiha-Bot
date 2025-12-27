@@ -1,9 +1,8 @@
 // src/utils/getJid.ts
-import { proto } from "@whiskeysockets/baileys";
+import type { CommandContext } from "../types/Command";
 
-export function getJid(m: proto.IWebMessageInfo): string {
-  if (!m.key?.remoteJid) {
-    throw new Error("Mensagem sem remoteJid");
-  }
-  return m.key?.remoteJid;
+export function getJid(ctx: CommandContext): string {
+  const jid = ctx.msg.key?.remoteJid;
+  if (!jid) return "";
+  return jid;
 }
