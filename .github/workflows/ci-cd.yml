@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI/CD Pipeline
 
 on:
   push:
@@ -13,23 +13,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout do código
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+      # 3️⃣ Instalação limpa das dependências
+      - name: Clean Install Dependencies
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
+        shell: bash
 
-      - name: Run linter
+      # 4️⃣ Rodar ESLint
+      - name: Run ESLint
         run: npm run lint
+        shell: bash
+        working-directory: ./
 
-      - name: Run tests
+      # 5️⃣ Rodar Tests
+      - name: Run Tests
         run: npm test
+        shell: bash
+        working-directory: ./
 
-      - name: Build project
+      # 6️⃣ Build do projeto
+      - name: Build Project
         run: npm run build
+        shell: bash
+        working-directory: ./
