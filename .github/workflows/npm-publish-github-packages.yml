@@ -12,8 +12,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
       - run: npm install
-      cache: 'npm'
       - run: npm test
 
   publish-gpr:
@@ -27,9 +27,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
           registry-url: https://npm.pkg.github.com/
       - run: npm install
-      cache: 'npm'
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets. GITHUB_TOKEN }}
