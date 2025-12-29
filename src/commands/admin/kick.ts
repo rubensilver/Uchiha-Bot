@@ -1,5 +1,7 @@
-
 import { Command } from "../../types/Command";
+
+// 🔒 lock anti-lag / kick duplicado
+const kickLocks = new Set<string>();
 
 const command: Command = {
   meta: {
@@ -7,29 +9,108 @@ const command: Command = {
     category: "admin",
     description: "Remover membro do clã"
   },
+
   async run(ctx) {
-    const { sock, msg, args } = ctx;
-    const jid = msg.key?.remoteJid!;
+    const { sock, msg } = ctx;
+    const jid = msg.key?.remoteJid;
     if (!jid) return;
 
-    if (args.length === 0) {
-      return sock.sendMessage(jid!, {
-        text: `🌑 *Jutsu incompleto*
+    // 🔒 apenas grupos
+    if (!jid.endsWith("@g.us")) {
+      await sock.sendMessage(jid, {
+        text: `🌑 *Jutsu proibido*
 
-Uso correto:
-➜ kick <parâmetros>
+Este comando só funciona em grupos.
 
-🩸 *“Até o Sharingan exige precisão.”*`
+👁️ *“O Sharingan só observa dentro do clã.”*`
       });
+      return;
     }
 
-    await sock.sendMessage(jid!, {
-      text: `🔥 *Técnica executada: kick*
+    // 🎯 alvo: reply (qualquer tipo) ou menção
+    const context = msg.message?.extendedTextMessage?.contextInfo;
 
-O comando foi aceito pelo clã.
+    const rawTarget =
+      context?.participant ||
+      context?.mentionedJid?.[0];
 
-👁️ *“A ordem foi cumprida sem hesitação.”*`
-    });
+    if (!rawTarget) {
+      await sock.sendMessage(jid, {
+        text: `❌ *Selo incompleto*
+
+Responda **qualquer mensagem**
+ou mencione o membro.
+
+🩸 *“Toda técnica exige um alvo.”*`
+      });
+      return;
+    }
+
+    // ✅ NORMALIZA O JID (CORREÇÃO CRÍTICA)
+    const target =
+      rawTarget.split(":")[0] + "@s.whatsapp.net";
+
+    // 🚫 não permite kick no próprio bot
+    const botJid =
+      sock.user?.id?.split(":")[0] + "@s.whatsapp.net";
+
+    if (target === botJid) {
+      await sock.sendMessage(jid, {
+        text: `🌑 *Técnica anulada*
+
+O Uchiha não pode atacar a si mesmo.`
+      });
+      return;
+    }
+
+    // 🚫 não permite kick no DONO do grupo
+    const metadata = await sock.groupMetadata(jid);
+    const owner = metadata.owner;
+
+    if (target === owner) {
+      await sock.sendMessage(jid, {
+        text: `🌑 *Técnica proibida*
+
+O líder do clã não pode ser removido.
+
+👁️ *“Nem mesmo um Uchiha desafia o fundador.”*`
+      });
+      return;
+    }
+
+    // 🔒 anti-kick duplicado (lag / spam)
+    const lockKey = `${jid}:${target}`;
+    if (kickLocks.has(lockKey)) return;
+    kickLocks.add(lockKey);
+
+    try {
+      // ⚔️ EXECUÇÃO REAL
+      await sock.groupParticipantsUpdate(
+        jid,
+        [target],
+        "remove"
+      );
+
+      await sock.sendMessage(jid, {
+        text: `🔥 *Técnica executada: KICK*
+
+O membro foi removido do clã.
+
+👁️ *“A ordem foi cumprida sem hesitação.”*`,
+        mentions: [target]
+      });
+
+    } catch {
+      await sock.sendMessage(jid, {
+        text: `🌑 *Técnica falhou*
+
+Não foi possível remover o membro.
+
+👁️ *“Nem toda batalha pode ser vencida.”*`
+      });
+    } finally {
+      kickLocks.delete(lockKey);
+    }
   }
 };
 

@@ -1,14 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
+    "target": "ES2022",
+    "module": "NodeNext",
     "rootDir": "src",
     "outDir": "build",
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "noEmitOnError": false,
     "resolveJsonModule": true,
     "types": ["node"]
   },

@@ -1,21 +1,32 @@
 import { Command, CommandContext } from "../types/Command";
+import { registerCommand } from "./commandHandler";
 import * as path from "path";
 import * as fs from "fs";
 
+export {}; // impede conflito de escopo
 // Essa função irá carregar dinamicamente os comandos da pasta de comandos
 export async function loadCommands() {
+  // limpa cache do require para permitir reload real
+  Object.keys(require.cache).forEach((key) => {
+    if (key.includes("/commands/")) delete require.cache[key];
+  });
   const commandsDir = __dirname;
   const dirs = fs.readdirSync(commandsDir).filter(file => fs.statSync(path.join(commandsDir, file)).isDirectory()); // Buscar subpastas
 console.log('Diretório de comandos:', commandsDir);
 
 for (const dir of dirs) {
   const dirPath = path.join(commandsDir, dir);
-  const files = fs.readdirSync(dirPath).filter(file => file.endsWith(".js"));
+  const files = fs
+  .readdirSync(dirPath)
+  .filter(file => file.endsWith(".js") || file.endsWith(".ts"));
 
   for (const file of files) {
     const commandPath = path.join(dirPath, file);
 const commandModule = require(commandPath).default;
     if (commandModule) {
+      if (!commandModule?.meta?.name || !commandModule?.run) continue;
+  registerCommand(commandModule as Command);
+}
       // Aqui você registraria o comando, por exemplo, no bot handler
       // Supondo que o bot tenha um método de registro como `registerCommand` (isso vai depender do seu código)
       // bot.registerCommand(commandModule);
@@ -23,13 +34,11 @@ const commandModule = require(commandPath).default;
   }
 }
 
-}
-
 const command: Command = {
   meta: {
     name: "loader",
     alias: ["reload", "recarregar"],
-    category: "fix",
+    category: "owner",
     description: "Recarrega todos os comandos do Clã Uchiha",
   },
 

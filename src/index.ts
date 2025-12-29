@@ -2,38 +2,55 @@
 import fs from "fs";
 import path from "path";
 import { startBot } from "./start";
+import { startBackupScheduler } from "./backup/scheduler";
 import { Command } from "./types/Command";
-import { registerCommand } from "./core/commandHandler";
+import { registerCommand } from "./commands/commandHandler";
 
+/**
+ * Carrega todos os comandos da pasta /commands
+ * Define automaticamente a categoria pelo nome da pasta
+ * Registra tudo no CORE (commandHandler)
+ */
 export function loadCommands() {
-  const baseDir = path.join(__dirname, "commands");
+  const commandsDir = path.join(__dirname, "commands");
 
   function walk(dir: string) {
     for (const file of fs.readdirSync(dir)) {
-      const full = path.join(dir, file);
+      const fullPath = path.join(dir, file);
 
-      if (fs.statSync(full).isDirectory()) {
-        walk(full);
+      // Entrar em subpastas
+      if (fs.statSync(fullPath).isDirectory()) {
+        walk(fullPath);
         continue;
       }
 
+      // Apenas arquivos JS/TS
       if (!file.endsWith(".js") && !file.endsWith(".ts")) continue;
 
-      const mod = require(full);
+      const mod = require(fullPath);
       const cmd: Command | undefined = mod.default ?? mod;
-      if (!cmd || !cmd.meta || !cmd.run) continue;
 
-      const rel = path.relative(baseDir, full);
-      const parts = rel.split(path.sep);
-      if (!cmd.meta.category && parts[0]) {
-        cmd.meta.category = parts[0].toLowerCase();
+      if (!cmd || !cmd.meta || typeof cmd.run !== "function") {
+        console.warn(`⚠️ Arquivo ignorado: ${file}`);
+        continue;
+      }
+
+      // Categoria automática pela pasta
+      const relative = path.relative(commandsDir, fullPath);
+      const [category] = relative.split(path.sep);
+
+      if (!cmd.meta.category && category) {
+        cmd.meta.category = category.toLowerCase();
       }
 
       registerCommand(cmd);
     }
   }
 
-  walk(baseDir);
+  walk(commandsDir);
 }
 
+// Inicializa o bot
 startBot();
+// Backup do Bot
+startBackupScheduler();

@@ -86,7 +86,7 @@ export async function connect(): Promise<WASocket> {
         
         if (!systemsLoaded) {
           systemsLoaded = true;
-          loadCommands();
+          await loadCommands();
           registerMessageHandler(sock);
           registerAntiLigar(sock);
           debug("Sistemas carregados");

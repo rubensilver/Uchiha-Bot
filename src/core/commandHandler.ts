@@ -1,38 +1,32 @@
 // src/core/commandHandler.ts
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { getUserName } from "../utils/getUserName";
-import { getPermissions } from "../utils/getPermissions";
-import { Command, CommandContext } from "../types/Command";
+import { runCommand } from "../commands/commandHandler";
 import { PermissionSystem } from "./PermissionSystem";
-
-const commandRegistry = new Map<string, Command>();
+import { getCommand } from "../commands/commandHandler";
 
 /**
- * Registra um comando no registry (name + aliases)
+ * Verifica se o BOT é ADMIN no grupo
+ * (admin comum já basta)
  */
-export function registerCommand(cmd: Command) {
-  if (!cmd.meta.name) {
-    console.warn("⚠️ Comando sem nome ignorado");
-    return;
-  }
+async function isBotAdmin(
+  sock: WASocket,
+  jid: string
+): Promise<boolean> {
+  if (!sock.user) return false;
+  
+  const metadata = await sock.groupMetadata(jid);
+  const botJid = sock.user?.id?.split(":")[0] + "@s.whatsapp.net";
 
-  const name = cmd.meta.name.toLowerCase();
-  commandRegistry.set(name, cmd);
-
-  // Registrar aliases também
-  if (cmd.meta.alias && Array.isArray(cmd.meta.alias)) {
-    cmd.meta.alias.forEach((alias) => {
-      commandRegistry.set(alias.toLowerCase(), cmd);
-    });
-  }
-
-  console.log(`✅ Comando registrado: ${cmd.meta.name} (${cmd.meta.category ?? "sem categoria"})`);
+  const bot = metadata.participants.find(p => p.id === botJid);
+  return bot?.admin != null;
 }
 
 /**
- * Executa um comando pelo nome — o handler valida permissões aqui.
- * O nível de permissão é inferido automaticamente a partir de cmd.meta.category,
- * que é preenchido pelo loader (index.ts) com base na pasta do ficheiro.
+ * CORE:
+ * - NÃO registra comandos
+ * - NÃO guarda comandos
+ * - NÃO cria CommandContext
+ * - APENAS valida permissão e delega execução
  */
 export async function executeCommand(
   sock: WASocket,
@@ -40,89 +34,59 @@ export async function executeCommand(
   commandName: string,
   args: string[]
 ): Promise<boolean> {
-  const cmd = commandRegistry.get(commandName.toLowerCase());
 
-  if (!cmd) {
-    return false;
+  // busca o comando
+  const cmd = getCommand(commandName.toLowerCase());
+  if (!cmd) return false;
+
+  const jid = msg.key?.remoteJid;
+  if (!jid) return true;
+
+  // inferir permissão pela categoria
+  const category = (cmd.meta.category || "").toLowerCase();
+
+  let required: "owner" | "admin" | "user" = "user";
+  if (category === "owner") required = "owner";
+  else if (category === "admin" || category.startsWith("adm")) required = "admin";
+
+  // valida permissão do USUÁRIO
+  const allowed = await PermissionSystem.checkPermission(
+    sock,
+    msg,
+    required
+  );
+
+  if (!allowed) {
+    const name =
+      required === "owner"
+        ? "Dono"
+        : required === "admin"
+        ? "Admin"
+        : "Usuário";
+
+    await sock.sendMessage(jid, {
+      text: `🔒 *Acesso Negado*\n\nApenas *${name}* pode usar este comando.`
+    });
+    return true;
   }
 
-  try {
-    // Inferir nível requerido pela categoria do comando (não do ficheiro)
-    const category = (cmd.meta.category || "").toLowerCase();
+  // 🔥 VERIFICAÇÃO REAL: BOT PRECISA SER ADMIN
+  if (required === "admin" && jid.endsWith("@g.us")) {
+    const botIsAdmin = await isBotAdmin(sock, jid);
 
-    // Mapeamento: pasta 'owner' => owner, 'admin' => admin, qualquer outro => user
-    let required: "owner" | "admin" | "user" = "user";
-    if (category === "owner") required = "owner";
-    else if (category === "admin" || category.startsWith("adm")) required = "admin";
+    if (!botIsAdmin) {
+      await sock.sendMessage(jid, {
+        text: `🌑 *Técnica selada*
 
-// Verifica permissões via PermissionSystem (tudo centralizado no handler)
-const allowed = await PermissionSystem.checkPermission(
-  sock,
-  msg,
-  required
-);
+O Uchiha está no clã,
+mas *não possui cargo de administrador*.
 
-    if (!allowed) {
-      const jid = msg.key?.remoteJid;
-      if (jid) {
-        const permissionName = required === "owner" ? "Dono" : "Admin";
-        await sock.sendMessage(jid, {
-          text: `🔒 *Acesso Negado*\n\n👁️‍🗨️ Apenas ${permissionName} do Clã Uchiha pode usar este comando.\n\n🩸 *"O poder sem autoridade é fraqueza."*`
-        });
-      }
-      // retornamos true porque o comando foi reconhecido, mas não executado por permissão
+👁️ *“Sem autoridade, nenhuma ordem é executada.”*`
+      });
       return true;
     }
-
-    const jid = msg.key!.remoteJid!;
-const user = msg.key!.participant || jid;
-
-const { isAdmin, isOwner } = await getPermissions(sock, msg);
-
-const ctx: CommandContext = {
-  sock,
-  msg,
-  args,
-
-  userJid: user,
-  userName: getUserName(msg),
-  isAdmin,
-  isOwner,
-
-  reply: async (text: string) => {
-    await sock.sendMessage(jid, { text });
-  },
-
-  mention: async (text: string) => {
-    await sock.sendMessage(jid, {
-      text,
-      mentions: [user],
-    });
-  },
-};
-
-    // Executa o comando (os ficheiros de comando não precisam declarar permissões)
-    await cmd.run(ctx);
-    return true;
-  } catch (err) {
-    console.error(`❌ Erro ao executar comando ${commandName}:`, err);
-    const jid = msg.key?.remoteJid;
-    if (jid) {
-      await sock.sendMessage(jid, {
-        text: `⚠️ *Erro ao executar comando*\n\n🌑 *"Um erro perturbou o Sharingan."*`
-      });
-    }
-    return true;
   }
-}
 
-/**
- * Listar comandos (opcional)
- */
-export function listCommands(): Command[] {
-  const unique = new Map<string, Command>();
-  commandRegistry.forEach((cmd) => {
-    if (!unique.has(cmd.meta.name)) unique.set(cmd.meta.name, cmd);
-  });
-  return Array.from(unique.values());
+  // permissão válida + bot apto
+  return true;
 }

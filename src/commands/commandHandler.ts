@@ -1,66 +1,86 @@
 // src/commands/commandHandler.ts
-
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { getPermissions } from "../utils/getPermissions";
+import { Command, CommandContext } from "../types/Command";
 import { getUserName } from "../utils/getUserName";
-import { Command } from "../types/Command";
+import { getPermissions } from "../utils/getPermissions";
 
 const commands = new Map<string, Command>();
 
-// usado pelo loader
+/**
+
+Registra comandos (name + aliases)
+*/
 export function registerCommand(cmd: Command) {
-  commands.set(cmd.meta.name, cmd);
+commands.set(cmd.meta.name.toLowerCase(), cmd);
 
-  if (cmd.meta.alias) {
-    for (const a of cmd.meta.alias) {
-      commands.set(a, cmd);
-    }
-  }
+
+if (cmd.meta.alias) {
+for (const alias of cmd.meta.alias) {
+commands.set(alias.toLowerCase(), cmd);
+}
+}
 }
 
-// usado pelo core (se existir)
+/**
+
+Retorna comando pelo nome
+*/
 export function getCommand(name: string): Command | undefined {
-  return commands.get(name);
+return commands.get(name.toLowerCase());
 }
 
-// usado pelo messenger.ts
+
 export async function handleCommand(
-  sock: WASocket,
-  msg: proto.IWebMessageInfo,
-  body: string
+sock: WASocket,
+msg: proto.IWebMessageInfo,
+commandName: string,
+args: string[]
 ) {
-  // REMOVE qualquer lógica de prefixo daqui
-  const parts = body.trim().split(/\s+/);
-  const name = parts[0].toLowerCase(); // ✅ NÃO remove prefixo aqui
-  const args = parts.slice(1);
+const cmd = getCommand(commandName);
+if (!cmd) return false;
 
-  const cmd = commands.get(name);
-  if (!cmd) return;
+await runCommand(sock, msg, cmd, args);
+return true;
+}
 
-  const jid = msg.key!.remoteJid!;
+/**
+
+Executa o comando (SEM permissão)
+*/
+export async function runCommand(
+sock: WASocket,
+msg: proto.IWebMessageInfo,
+cmd: Command,
+args: string[]
+) {
+const jid = msg.key!.remoteJid!;
 const user = msg.key!.participant || jid;
+
 
 const { isAdmin, isOwner } = await getPermissions(sock, msg);
 
-await cmd.run({
-  sock,
-  msg,
-  args,
+const ctx: CommandContext = {
+sock,
+msg,
+args,
 
-  userJid: user,
-  userName: getUserName(msg),
-  isAdmin,
-  isOwner,
+userJid: user,  
+userName: getUserName(msg),  
+isAdmin,  
+isOwner,  
 
-  reply: async (text: string) => {
-    await sock.sendMessage(jid, { text });
-  },
+reply: async (text: string) => {  
+  await sock.sendMessage(jid, { text });  
+},  
 
-  mention: async (text: string) => {
-    await sock.sendMessage(jid, {
-      text,
-      mentions: [user],
-    });
-  },
-});
+mention: async (text: string) => {  
+  await sock.sendMessage(jid, {  
+    text,  
+    mentions: [user],  
+  });  
+},
+
+};
+
+await cmd.run(ctx);
 }

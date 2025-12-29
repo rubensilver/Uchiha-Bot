@@ -10,18 +10,16 @@ export async function getPermissions(
 
   const isOwner = OWNER.numbers.some(n => user.includes(n));
 
-  let isAdmin = false;
+let isAdmin = false;
 
-  if (jid.endsWith("@g.us")) {
-    const meta = await sock.groupMetadata(jid);
-    type Participant = { id: string; admin?: string | null };
+if (jid.endsWith("@g.us")) {
+  const metadata = await sock.groupMetadata(jid);
 
-const metadata = await sock.groupMetadata(jid);
-
-const isAdmin = metadata.participants.some(
-  (p: Participant) => p.id === user && p.admin != null
-);
+  isAdmin = metadata.participants.some(
+    (p: { id: string; admin?: string | null }) =>
+      p.id === user && p.admin != null
+  );
 }
 
-  return { isAdmin, isOwner };
+return { isAdmin, isOwner };
 }
