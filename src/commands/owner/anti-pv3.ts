@@ -1,4 +1,4 @@
-import { Command } from "../../types/Command";
+import { Command } from "../../types/Command.js";
 
 let antiPv3Status = false;  // Variável para controlar o estado do anti-pv3
 

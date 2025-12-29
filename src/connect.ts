@@ -7,17 +7,19 @@ import makeWASocket, {
   ConnectionState
 } from "@whiskeysockets/baileys";
 
-import P from "pino";
+import pino from "pino";
 import fs from "fs";
 import path from "path";
 import readline from "readline";
 import colors from "colors";
 
-import { loadCommands } from "./commands/loader";
-import { registerMessageHandler } from "./messenger";
-import { BOT_NUMBER } from "./config/settings";
-import { registerAntiLigar } from "./anti/antiLigar";
-import { debug } from "./utils/debug";
+import { startDatabase } from "./database/index.js";
+import { saveDB } from "./core/db.js";
+import { loadCommands } from "./commands/loader.js";
+import { registerMessageHandler } from "./messenger.js";
+import { BOT_NUMBER } from "./config/settings.js";
+import { registerAntiLigar } from "./anti/antiLigar.js";
+import { debug } from "./utils/debug.js";
 
 /* ================== READLINE ================== */
 const rl = readline.createInterface({
@@ -41,11 +43,21 @@ export async function connect(): Promise<WASocket> {
   const sock = makeWASocket({
     version,
     auth: state,
-    logger: P({ level: "silent" }),
+    logger: pino.default({ level: "silent" }),
     printQRInTerminal: false,
     // Importante: Browser deve ser este formato para Pairing Code funcionar sempre
     browser: ["Ubuntu", "Chrome", "20.0.04"],
   });
+
+process.on("SIGINT", () => {
+  saveDB();
+  process.exit();
+});
+
+process.on("SIGTERM", () => {
+  saveDB();
+  process.exit();
+});
 
   // 2. SOLICITAÇÃO DE PAIRING CODE (Fora do connection.update)
   // Se não estiver registrado, ele pede o código imediatamente
@@ -86,6 +98,7 @@ export async function connect(): Promise<WASocket> {
         
         if (!systemsLoaded) {
           systemsLoaded = true;
+          await startDatabase();
           await loadCommands();
           registerMessageHandler(sock);
           registerAntiLigar(sock);
@@ -94,7 +107,8 @@ export async function connect(): Promise<WASocket> {
       }
 
       if (connection === "close") {
-        console.log(colors.red(`❌ Conexão fechada. Motivo: ${status}`));
+  saveDB(); // ✅ CRÍTICO
+  console.log(colors.red(`❌ Conexão fechada. Motivo: ${status}`));
 
         // 3. SE O ERRO FOR 401 (Sessão expirada/inválida), APAGA A PASTA E REINICIA
         if (status === DisconnectReason.loggedOut || status === 401) {

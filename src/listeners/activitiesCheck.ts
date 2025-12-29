@@ -1,5 +1,5 @@
 import { WASocket } from "@whiskeysockets/baileys";
-import { getLegendas } from "../storage/legendasStore";
+import { getLegendas } from "../storage/legendasStore.js";
 
 export async function activitiesCheck(
   sock: WASocket,

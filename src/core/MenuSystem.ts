@@ -1,13 +1,13 @@
-import { PrefixManager } from "../core/PrefixManager";
-import { TextCenter } from "../core/TextCenter";
-import { ThemeManager } from "../core/ThemeManager";
+import { PrefixManager } from "../core/PrefixManager.js";
+import { TextCenter } from "../core/TextCenter.js";
+import { ThemeManager } from "../core/ThemeManager.js";
 
-import { UCHIHA_THEME } from "../themes/uchihaTheme";
-import { AKATSUKI_THEME } from "../themes/akatsukiTheme";
-import { AMATERASU_THEME } from "../themes/amaterasuTheme";
-import { MANGEKYOU_THEME } from "../themes/mangekyouTheme";
-import { SUSANOO_THEME } from "../themes/susanooTheme";
-import { UCHIHA_DARK_THEME } from "../themes/uchihaDarkTheme";
+import { UCHIHA_THEME } from "../themes/uchihaTheme.js";
+import { AKATSUKI_THEME } from "../themes/akatsukiTheme.js";
+import { AMATERASU_THEME } from "../themes/amaterasuTheme.js";
+import { MANGEKYOU_THEME } from "../themes/mangekyouTheme.js";
+import { SUSANOO_THEME } from "../themes/susanooTheme.js";
+import { UCHIHA_DARK_THEME } from "../themes/uchihaDarkTheme.js";
 
 export class MenuSystem {
   static getTheme() {

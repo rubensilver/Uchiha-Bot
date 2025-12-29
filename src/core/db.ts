@@ -1,13 +1,19 @@
-import initSqlJs from "sql.js";
+// src/core/db.ts
+import initSqlJs, { type Database as SqlDatabase } from "sql.js";
 import fs from "fs";
+import path from "path";
 
-const DB_PATH = "./data/uchiha.sqlite";
+export const DB_PATH = path.resolve("data/uchiha.sqlite");
 
-let db: any;
+let db: SqlDatabase | null = null;
 
-export async function initDB() {
+// inicializa o banco (UMA vez)
+export async function initDB(): Promise<void> {
+  fs.mkdirSync("data", { recursive: true });
+
   const SQL = await initSqlJs({
-    locateFile: (file: string) => `node_modules/sql.js/dist/${file}`
+    locateFile: (file: string) =>
+      path.resolve("node_modules/sql.js/dist", file),
   });
 
   if (fs.existsSync(DB_PATH)) {
@@ -25,11 +31,17 @@ export async function initDB() {
   `);
 }
 
-export function saveDB() {
+// salva explicitamente (quando TU chamar)
+export function saveDB(): void {
+  if (!db) return;
   const data = db.export();
   fs.writeFileSync(DB_PATH, Buffer.from(data));
 }
 
-export function getDB() {
+// única fonte do DB
+export function getDB(): SqlDatabase {
+  if (!db) {
+    throw new Error("DB not initialized");
+  }
   return db;
 }

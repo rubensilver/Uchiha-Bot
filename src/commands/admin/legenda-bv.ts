@@ -1,6 +1,6 @@
-import { setLegendas } from "../../storage/legendasStore";
+import { setLegendas } from "../../storage/legendasStore.js";
 
-import { Command } from "../../types/Command";
+import { Command } from "../../types/Command.js";
 
 const command: Command = {
   meta: {

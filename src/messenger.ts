@@ -1,10 +1,10 @@
 // src/messenger.ts
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { executeCommand } from "./core/commandHandler";
-import { handleCommand } from "./commands/commandHandler";
-import { handleMenu } from "./menus/menuHandler";
-import { PrefixManager } from "./core/PrefixManager";
-import { handleAnti } from "./anti/AntiSystem";
+import { executeCommand } from "./core/commandHandler.js";
+import { handleCommand } from "./commands/commandHandler.js";
+import { handleMenu } from "./menus/menuHandler.js";
+import { PrefixManager } from "./core/PrefixManager.js";
+import { handleAnti } from "./anti/AntiSystem.js";
 
 /**
 
@@ -44,24 +44,23 @@ prefix,
 if (menuHandled) return;
 
 // ✅ CORE valida permissão
-const allowed = await executeCommand(
-sock,
-msg,
-commandName,
-args
+const command = await executeCommand(
+  sock,
+  msg,
+  commandName,
+  args
 );
 
-if (!allowed) {
-await sendReply(
-sock,
-msg,
-`❌ Comando \`${commandName}\` não encontrado!`);
-return;
+if (!command) {
+  await sendReply(
+    sock,
+    msg,
+  `❌ Comando \`${commandName}\` não encontrado!`);
+  return;
 }
 
 // ✅ COMMANDS executa
 await handleCommand(sock, msg, commandName, args);
-
 
 } catch (error) {
 console.error("❌ Erro ao processar mensagem:", error);

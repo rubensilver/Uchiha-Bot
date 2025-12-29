@@ -1,5 +1,5 @@
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { OWNER } from "../config/conf";
+import { OWNER } from "../config/conf.js";
 
 /**
  * Níveis de permissão do sistema

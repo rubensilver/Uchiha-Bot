@@ -1,35 +1,40 @@
-import { Command, CommandContext } from "../types/Command";
-import { registerCommand } from "./commandHandler";
+import { Command, CommandContext } from "../types/Command.js";
+import { registerCommand, clearCommands } from "./commandHandler.js";
 import * as path from "path";
 import * as fs from "fs";
+import { fileURLToPath } from "url";
 
 export {}; // impede conflito de escopo
-// Essa função irá carregar dinamicamente os comandos da pasta de comandos
+
+const __filename = fileURLToPath(import.meta.url);
+const commandsDir = path.dirname(__filename);
+
+// Carrega dinamicamente os comandos
 export async function loadCommands() {
-  // limpa cache do require para permitir reload real
-  Object.keys(require.cache).forEach((key) => {
-    if (key.includes("/commands/")) delete require.cache[key];
-  });
-  const commandsDir = __dirname;
-  const dirs = fs.readdirSync(commandsDir).filter(file => fs.statSync(path.join(commandsDir, file)).isDirectory()); // Buscar subpastas
-console.log('Diretório de comandos:', commandsDir);
+  // 🔥 LIMPA COMANDOS ANTIGOS
+  clearCommands();
 
-for (const dir of dirs) {
-  const dirPath = path.join(commandsDir, dir);
-  const files = fs
-  .readdirSync(dirPath)
-  .filter(file => file.endsWith(".js") || file.endsWith(".ts"));
+  const dirs = fs
+    .readdirSync(commandsDir)
+    .filter(dir =>
+      fs.statSync(path.join(commandsDir, dir)).isDirectory()
+    );
 
-  for (const file of files) {
-    const commandPath = path.join(dirPath, file);
-const commandModule = require(commandPath).default;
-    if (commandModule) {
-      if (!commandModule?.meta?.name || !commandModule?.run) continue;
-  registerCommand(commandModule as Command);
-}
-      // Aqui você registraria o comando, por exemplo, no bot handler
-      // Supondo que o bot tenha um método de registro como `registerCommand` (isso vai depender do seu código)
-      // bot.registerCommand(commandModule);
+  for (const dir of dirs) {
+    const dirPath = path.join(commandsDir, dir);
+
+    const files = fs
+      .readdirSync(dirPath)
+      .filter(file => file.endsWith(".ts") || file.endsWith(".js"))
+
+    for (const file of files) {
+      const commandPath = path.join(dirPath, file);
+      const mod = await import(commandPath);
+      const command = mod.default;
+
+      if (!command?.meta?.name || typeof command.run !== "function") continue;
+
+      registerCommand(command as Command);
     }
   }
 }
@@ -43,22 +48,20 @@ const command: Command = {
   },
 
   async run(ctx: CommandContext) {
-    const { sock, msg } = ctx;
-    const jid = msg.key?.remoteJid;
+    const jid = ctx.msg.key?.remoteJid;
     if (!jid) return;
 
-    // Recarrega os comandos
-    await loadCommands(); // 🔥 religa comandos no handler
+    await loadCommands();
 
-    await sock.sendMessage(jid, {
+    await ctx.sock.sendMessage(jid, {
       text: `🩸 *Ritual de Reconexão Uchiha*
 
 Os selos foram refeitos.
 Os comandos despertaram novamente.
 
-🔥 *“Mesmo após a queda, o Sharingan volta a girar.”*`
+🔥 *“Mesmo após a queda, o Sharingan volta a girar.”*`,
     });
-  }
+  },
 };
 
 export default command;

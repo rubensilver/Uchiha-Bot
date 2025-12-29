@@ -1,5 +1,5 @@
 // src/start.ts
-import { connect } from "./connect";
+import { connect } from "./connect.js";
 
 export async function startBot() {
   try {

@@ -1,5 +1,5 @@
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { getLegendas } from "../storage/legendasStore";
+import { getLegendas } from "../storage/legendasStore.js";
 
 export async function foreignUser(
   sock: WASocket,

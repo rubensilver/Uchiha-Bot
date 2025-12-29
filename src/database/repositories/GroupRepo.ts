@@ -1,5 +1,5 @@
 // src/database/repositories/GroupRepo.ts
-import { getDB } from "../index";
+import { getDB } from "../index.js";
 
 // trava simples contra race condition / spam / lag
 const groupLocks = new Set<string>();

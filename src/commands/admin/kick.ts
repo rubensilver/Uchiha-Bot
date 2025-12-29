@@ -1,4 +1,4 @@
-import { Command } from "../../types/Command";
+import { Command } from "../../types/Command.js";
 
 // 🔒 lock anti-lag / kick duplicado
 const kickLocks = new Set<string>();

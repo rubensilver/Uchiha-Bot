@@ -1,5 +1,5 @@
-import { Command, CommandContext } from "../../types/Command";
-import { AntiLigarState } from "../../state/AntiLigarState";
+import { Command, CommandContext } from "../../types/Command.js";
+import { AntiLigarState } from "../../state/AntiLigarState.js";
 
 const command: Command = {
   meta: {

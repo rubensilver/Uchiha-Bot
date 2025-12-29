@@ -1,8 +1,8 @@
 // src/core/commandHandler.ts
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { runCommand } from "../commands/commandHandler";
-import { PermissionSystem } from "./PermissionSystem";
-import { getCommand } from "../commands/commandHandler";
+import { getCommand } from "../commands/commandHandler.js";
+import { PermissionSystem } from "./PermissionSystem.js";
+import { getCommand } from "../commands/commandHandler.js";
 
 /**
  * Verifica se o BOT é ADMIN no grupo

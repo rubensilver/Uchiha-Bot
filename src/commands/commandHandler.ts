@@ -1,8 +1,8 @@
 // src/commands/commandHandler.ts
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { Command, CommandContext } from "../types/Command";
-import { getUserName } from "../utils/getUserName";
-import { getPermissions } from "../utils/getPermissions";
+import { Command, CommandContext } from "../types/Command.js";
+import { getUserName } from "../utils/getUserName.js";
+import { getPermissions } from "../utils/getPermissions.js";
 
 const commands = new Map<string, Command>();
 
@@ -18,17 +18,21 @@ if (cmd.meta.alias) {
 for (const alias of cmd.meta.alias) {
 commands.set(alias.toLowerCase(), cmd);
 }
+  }
 }
+
+export function clearCommands() {
+  commands.clear();
 }
 
 /**
 
 Retorna comando pelo nome
 */
-export function getCommand(name: string): Command | undefined {
-return commands.get(name.toLowerCase());
+export function getCommand(name: any): Command | undefined {
+  if (typeof name !== "string") return;
+  return commands.get(name.toLowerCase());
 }
-
 
 export async function handleCommand(
 sock: WASocket,
@@ -69,15 +73,17 @@ userName: getUserName(msg),
 isAdmin,  
 isOwner,  
 
-reply: async (text: string) => {  
-  await sock.sendMessage(jid, { text });  
-},  
+reply: async (text: string) => {
+  if (!sock.user) return;
+  await sock.sendMessage(jid, { text });
+},
 
-mention: async (text: string) => {  
-  await sock.sendMessage(jid, {  
-    text,  
-    mentions: [user],  
-  });  
+mention: async (text: string) => {
+  if (!sock.user) return;
+  await sock.sendMessage(jid, {
+    text,
+    mentions: [user],
+  });
 },
 
 };

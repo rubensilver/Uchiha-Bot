@@ -1,5 +1,5 @@
 // src/database/repositories/UserRepo.ts
-import { getDB } from "../index";
+import { getDB } from "../index.js";
 
 export const UserRepo = {
   ensure(jid: string) {

@@ -1,4 +1,4 @@
-import type { CommandContext } from "../types/Command";
+import type { CommandContext } from "../types/Command.js";
 
 type ParseParams = {
   text: string;

@@ -1,5 +1,5 @@
 // src/utils/getUserName.ts
-import type { CommandContext } from "../types/Command";
+import type { CommandContext } from "../types/Command.js";
 
 const nameCache = new Map<string, string>();
 

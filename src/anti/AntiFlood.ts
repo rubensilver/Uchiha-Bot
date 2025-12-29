@@ -1,5 +1,5 @@
 import { WASocket, proto } from "@whiskeysockets/baileys";
-import { AntiStore } from "./AntiStore";
+import { AntiStore } from "./AntiStore.js";
 
 const floodCache = new Map<string, number[]>();
 

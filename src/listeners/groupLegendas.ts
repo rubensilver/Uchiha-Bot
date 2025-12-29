@@ -1,5 +1,5 @@
 import { proto, WASocket } from "@whiskeysockets/baileys";
-import { getLegendas } from "../storage/legendasStore";
+import { getLegendas } from "../storage/legendasStore.js";
 
 export async function groupLegendas(
   sock: WASocket,

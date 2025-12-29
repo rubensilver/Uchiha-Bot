@@ -1,5 +1,5 @@
 
-import { Command } from '../../types/Command';
+import { Command } from '../../types/Command.js';
 
 const command: Command = {
   meta: {

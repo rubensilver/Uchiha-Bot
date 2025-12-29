@@ -1,10 +1,15 @@
-import type { CommandContext } from "../types/Command";
-import { OWNER } from "../config/conf";
+import type { CommandContext } from "../types/Command.js";
+import { OWNER } from "../config/conf.js";
 
 export async function getPermissions(
   sock: CommandContext["sock"],
   msg: CommandContext["msg"]
 ) {
+  
+  if (!sock.user) {
+  return { isAdmin: false, isOwner: false };
+}
+
   const jid = msg.key?.remoteJid!;
   const user = msg.key?.participant || jid;
 

@@ -1,5 +1,5 @@
 // src/utils/getJid.ts
-import type { CommandContext } from "../types/Command";
+import type { CommandContext } from "../types/Command.js";
 
 export function getJid(ctx: CommandContext): string {
   const jid = ctx.msg.key?.remoteJid;

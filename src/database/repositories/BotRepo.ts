@@ -1,5 +1,5 @@
 // src/database/repositories/BotRepo.ts
-import { getDB } from "../index";
+import { getDB } from "../index.js";
 
 export const BotRepo = {
   set(key: string, value: string) {

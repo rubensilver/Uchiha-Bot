@@ -1,5 +1,5 @@
 // src/core/PrefixManager.ts
-import { PREFIX } from "../config/settings";
+import { PREFIX } from "../config/settings.js";
 
 export class PrefixManager {
   // ===============================

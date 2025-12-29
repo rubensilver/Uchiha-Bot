@@ -1,6 +1,6 @@
 import { WASocket } from "@whiskeysockets/baileys";
-import { AntiLigarState } from "../state/AntiLigarState";
-import { debug } from "../utils/debug";
+import { AntiLigarState } from "../state/AntiLigarState.js";
+import { debug } from "../utils/debug.js";
 
 export function registerAntiLigar(sock: WASocket) {
   debug("Anti-ligar registrado");

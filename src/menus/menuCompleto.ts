@@ -1,7 +1,7 @@
 // src/menus/menuCompleto.ts
 
-import { menuPrincipal } from "./menuPrincipal";
-import { menuOpcoes } from "./menuOpcoes";
+import { menuPrincipal } from "./menuPrincipal.js";
+import { menuOpcoes } from "./menuOpcoes.js";
 
 // Aceita:
 // 1) menuCompleto(prefix)

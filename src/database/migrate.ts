@@ -1,5 +1,5 @@
 // src/database/migrate.ts
-import { getDB } from "./index";
+import { getDB } from "./index.js";
 
 getDB().exec(`
 CREATE TABLE IF NOT EXISTS groups (

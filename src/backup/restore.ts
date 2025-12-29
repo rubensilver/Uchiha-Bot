@@ -1,6 +1,6 @@
 import fs from "fs";
 import zlib from "zlib";
-import { drive } from "./drive";
+import { drive } from "./drive.js";
 
 const DB_PATH = "data/uchiha.sqlite";
 
