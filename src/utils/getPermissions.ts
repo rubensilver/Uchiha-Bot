@@ -5,9 +5,9 @@ export async function getPermissions(
   sock: CommandContext["sock"],
   msg: CommandContext["msg"]
 ) {
-  const jid = msg.key?. remoteJid;
+  const jid = msg.key?.remoteJid;
 
-  if (!jid || !jid.endsWith("@g.us") || !sock.user || !msg.key?. participant) {
+  if (!jid || !jid.endsWith("@g.us") || !sock.user || !msg.key?.participant) {
     return {
       isGroup: false,
       senderIsAdmin: false,
@@ -25,7 +25,7 @@ export async function getPermissions(
   );
 
   const botJid = normalizeJid(
-    sock.user. id,
+    sock.user.id,
     participants
   );
 

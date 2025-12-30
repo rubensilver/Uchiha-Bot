@@ -18,7 +18,7 @@ export async function getGroupAdminsCached(
   const cached = CACHE.get(groupJid);
 
   // ✅ Cache ainda é válido? 
-  if (cached && cached. expiresAt > now) {
+  if (cached && cached.expiresAt > now) {
     return cached;
   }
 

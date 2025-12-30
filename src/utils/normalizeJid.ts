@@ -23,8 +23,8 @@ export function normalizeJid(
   // ✅ PASSO 3: Garante formato @s.whatsapp.net ou @g.us
   if (!jid.includes("@")) {
     jid += "@s.whatsapp.net";
-  } else if (! jid.includes("@s. whatsapp.net") && !jid.includes("@g.us")) {
-    jid = jid.replace(/@[\w.]+$/, "@s.whatsapp. net");
+  } else if (! jid.includes("@s.whatsapp.net") && !jid.includes("@g.us")) {
+    jid = jid.replace(/@[\w.]+$/, "@s.whatsapp.net");
   }
 
   return jid;

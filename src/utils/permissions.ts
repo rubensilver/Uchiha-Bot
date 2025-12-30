@@ -6,7 +6,7 @@ export async function checkAdmin(
   msg: CommandContext["msg"]
 ) {
   const groupJid = msg.key?.remoteJid;
-  if (!groupJid || !groupJid.endsWith("@g. us")) {
+  if (!groupJid || !groupJid.endsWith("@g.us")) {
     return {
       isGroup: false,
       senderIsAdmin: false,
@@ -14,7 +14,7 @@ export async function checkAdmin(
     };
   }
 
-  if (!sock.user || !msg. key?.participant) {
+  if (!sock.user || !msg.key?.participant) {
     return {
       isGroup: true,
       senderIsAdmin:  false,
