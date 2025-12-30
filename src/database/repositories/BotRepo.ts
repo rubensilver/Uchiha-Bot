@@ -1,19 +1,26 @@
 // src/database/repositories/BotRepo.ts
-import { getDB } from "../index.js";
+import { getDB, saveDB } from "../../core/db.js";
 
+/**
+ * Repositório do BOT
+ * Tabela: bot (key TEXT, value TEXT)
+ */
 export const BotRepo = {
-  set(key: string, value: string) {
-    getDB().prepare(`
-      INSERT INTO bot (key, value)
-      VALUES (?, ?)
-      ON CONFLICT(key) DO UPDATE SET value=excluded.value
-    `).run(key, value);
+  setAdminGroup(jid: string): void {
+    const db = getDB();
+
+    db.prepare(
+      "INSERT OR REPLACE INTO bot (key, value) VALUES (?, ?)"
+    ).run(["admin_group", jid]);
+
+    saveDB();
   },
 
-  get(key: string): string | null {
+  getAdminGroup(): string | null {
     const row = getDB()
       .prepare("SELECT value FROM bot WHERE key = ?")
-      .get(key) as any;
+        .get(["admin_group"]) as unknown as { value: string } | undefined;
+
     return row?.value ?? null;
-  }
+  },
 };

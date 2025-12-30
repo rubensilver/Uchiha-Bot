@@ -20,6 +20,8 @@ import { registerMessageHandler } from "./messenger.js";
 import { BOT_NUMBER } from "./config/settings.js";
 import { registerAntiLigar } from "./anti/antiLigar.js";
 import { debug } from "./utils/debug.js";
+import { BotRepo } from "./database/repositories/BotRepo.js";
+import { seedBot } from "./database/seed.js";
 
 /* ================== READLINE ================== */
 const rl = readline.createInterface({
@@ -99,6 +101,8 @@ process.on("SIGTERM", () => {
         if (!systemsLoaded) {
           systemsLoaded = true;
           await startDatabase();
+          BotRepo.setAdminGroup("120363404637342148@g.us");
+          seedBot();
           await loadCommands();
           registerMessageHandler(sock);
           registerAntiLigar(sock);

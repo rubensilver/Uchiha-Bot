@@ -1,11 +1,20 @@
+// src/utils/permissions.ts
 import type { CommandContext } from "../types/Command.js";
+
+function normalizeJid(jid: string, participants: any[]): string {
+  if (jid.includes("@lid")) {
+    const found = participants.find(p => p.lid === jid);
+    return found?.jid ?? jid;
+  }
+  return jid;
+}
 
 export async function checkAdmin(
   sock: CommandContext["sock"],
   msg: CommandContext["msg"]
 ) {
-  const jid = msg.key?.remoteJid;
-  if (!jid || !jid.endsWith("@g.us")) {
+  const groupJid = msg.key?.remoteJid;
+  if (!groupJid || !groupJid.endsWith("@g.us")) {
     return {
       isGroup: false,
       senderIsAdmin: false,
@@ -13,18 +22,34 @@ export async function checkAdmin(
     };
   }
 
-  const metadata = await sock.groupMetadata(jid);
+  if (!sock.user || !msg.key?.participant) {
+    return {
+      isGroup: true,
+      senderIsAdmin: false,
+      botIsAdmin: false
+    };
+  }
 
-  const senderId = msg.key?.participant!;
-  const botId = sock.user!.id;
+  const metadata = await sock.groupMetadata(groupJid);
+  const participants = metadata.participants;
 
-  const admins = metadata.participants
-    .filter((p: { admin?: string | null }) => p.admin) // 👈 qualquer admin
-    .map((p: { id: string }) => p.id);
+  const senderJid = normalizeJid(
+    msg.key.participant,
+    participants
+  );
+
+  const botJid = normalizeJid(
+    sock.user.id,
+    participants
+  );
+
+  const admins = participants
+    .filter(p => p.admin)
+    .map(p => normalizeJid(p.id, participants));
 
   return {
     isGroup: true,
-    senderIsAdmin: admins.includes(senderId),
-    botIsAdmin: admins.includes(botId)
+    senderIsAdmin: admins.includes(senderJid),
+    botIsAdmin: admins.includes(botJid)
   };
 }

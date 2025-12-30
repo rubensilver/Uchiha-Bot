@@ -10,7 +10,7 @@ export const GroupRepo = {
       .prepare(
         "INSERT OR IGNORE INTO groups (jid, is_open) VALUES (?, 1)"
       )
-      .run(jid);
+      .run([jid]);
   },
 
   open(jid: string) {
@@ -21,7 +21,7 @@ export const GroupRepo = {
       this.ensure(jid);
       getDB()
         .prepare("UPDATE groups SET is_open = 1 WHERE jid = ?")
-        .run(jid);
+        .run([jid]);
     } finally {
       groupLocks.delete(jid);
     }
@@ -35,7 +35,7 @@ export const GroupRepo = {
       this.ensure(jid);
       getDB()
         .prepare("UPDATE groups SET is_open = 0 WHERE jid = ?")
-        .run(jid);
+        .run([jid]);
     } finally {
       groupLocks.delete(jid);
     }
@@ -44,7 +44,7 @@ export const GroupRepo = {
   isOpen(jid: string): boolean {
     const row = getDB()
       .prepare("SELECT is_open FROM groups WHERE jid = ?")
-      .get(jid) as { is_open: number } | undefined;
+       .getAsObject([jid]) as { is_open: number } | undefined;
 
     return row?.is_open === 1;
   }

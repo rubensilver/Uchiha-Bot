@@ -48,7 +48,7 @@
     "formdata-node": "^6.0.3",
     "fs-extra": "^11.3.3",
     "glob": "^10.3.10",
-    "googleapis": "^169.0.0",
+    "googleapis": "^168.0.0",
     "got": "^14.6.5",
     "helmet": "^7.0.0",
     "jsdom": "^19.0.0",

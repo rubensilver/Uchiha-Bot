@@ -7,6 +7,8 @@ import fs from "fs";
 // garante a pasta do banco
 fs.mkdirSync("data", { recursive: true });
 
+export { initDB, getDB };
+
 // mantém o path (metadata / referência)
 export const dbPath = path.resolve("data/uchiha.db");
 

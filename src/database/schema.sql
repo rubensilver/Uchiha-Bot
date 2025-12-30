@@ -1,0 +1,17 @@
+-- BOT (configurações globais)
+CREATE TABLE IF NOT EXISTS bot (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);
+
+-- USUÁRIOS
+CREATE TABLE IF NOT EXISTS users (
+  jid TEXT PRIMARY KEY,
+  is_banned INTEGER DEFAULT 0
+);
+
+-- GRUPOS
+CREATE TABLE IF NOT EXISTS groups (
+  jid TEXT PRIMARY KEY,
+  is_open INTEGER DEFAULT 1
+);

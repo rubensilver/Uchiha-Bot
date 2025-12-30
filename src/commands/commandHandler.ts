@@ -2,7 +2,6 @@
 import { WASocket, proto } from "@whiskeysockets/baileys";
 import { Command, CommandContext } from "../types/Command.js";
 import { getUserName } from "../utils/getUserName.js";
-import { getPermissions } from "../utils/getPermissions.js";
 
 const commands = new Map<string, Command>();
 
@@ -60,9 +59,6 @@ args: string[]
 const jid = msg.key!.remoteJid!;
 const user = msg.key!.participant || jid;
 
-
-const { isAdmin, isOwner } = await getPermissions(sock, msg);
-
 const ctx: CommandContext = {
 sock,
 msg,
@@ -70,8 +66,6 @@ args,
 
 userJid: user,  
 userName: getUserName(msg),  
-isAdmin,  
-isOwner,  
 
 reply: async (text: string) => {
   if (!sock.user) return;
