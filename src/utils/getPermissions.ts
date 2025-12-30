@@ -1,21 +1,13 @@
-// src/utils/getPermissions.ts
 import type { CommandContext } from "../types/Command.js";
-
-function normalizeJid(jid: string, participants: any[]): string {
-  if (jid.includes("@lid")) {
-    const found = participants.find(p => p.lid === jid);
-    return found?.jid ?? jid;
-  }
-  return jid;
-}
+import { normalizeJid } from "./normalizeJid.js";
 
 export async function getPermissions(
   sock: CommandContext["sock"],
   msg: CommandContext["msg"]
 ) {
-  const jid = msg.key?.remoteJid;
+  const jid = msg.key?. remoteJid;
 
-  if (!jid || !jid.endsWith("@g.us") || !sock.user || !msg.key?.participant) {
+  if (!jid || !jid.endsWith("@g.us") || !sock.user || !msg.key?. participant) {
     return {
       isGroup: false,
       senderIsAdmin: false,
@@ -26,13 +18,14 @@ export async function getPermissions(
   const metadata = await sock.groupMetadata(jid);
   const participants = metadata.participants;
 
+  // ✅ CORRIGIDO: Usa normalizeJid centralizado
   const senderJid = normalizeJid(
     msg.key.participant,
     participants
   );
 
   const botJid = normalizeJid(
-    sock.user.id,
+    sock.user. id,
     participants
   );
 

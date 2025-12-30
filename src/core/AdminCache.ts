@@ -1,4 +1,5 @@
 import { WASocket } from "@whiskeysockets/baileys";
+import { normalizeJid } from "../utils/normalizeJid.js";
 
 type AdminCacheEntry = {
   admins: string[];
@@ -7,16 +8,7 @@ type AdminCacheEntry = {
 };
 
 const CACHE = new Map<string, AdminCacheEntry>();
-
-const TTL = 60 * 1000; // 60 segundos (igual projeto do teu amigo)
-
-function normalizeJid(jid: string, participants: any[]): string {
-  if (jid.includes("@lid")) {
-    const found = participants.find(p => p.lid === jid);
-    return found?.jid ?? jid;
-  }
-  return jid;
-}
+const TTL = 60 * 1000; // 60 segundos
 
 export async function getGroupAdminsCached(
   sock: WASocket,
@@ -25,18 +17,28 @@ export async function getGroupAdminsCached(
   const now = Date.now();
   const cached = CACHE.get(groupJid);
 
-  if (cached && cached.expiresAt > now) {
+  // ✅ Cache ainda é válido? 
+  if (cached && cached. expiresAt > now) {
     return cached;
   }
 
   const metadata = await sock.groupMetadata(groupJid);
   const participants = metadata.participants;
 
+  // ✅ CORRIGIDO: Normaliza cada admin
   const admins = participants
     .filter(p => p.admin)
     .map(p => normalizeJid(p.id, participants));
 
-  const botJid = normalizeJid(sock.user!.id, participants);
+  // ✅ CORRIGIDO:  Normaliza bot JID com participants
+  const botJid = normalizeJid(sock.user! .id, participants);
+
+  console.log("👁️ [DEBUG-ADMIN-CACHE]", {
+    botJid,
+    botExists: admins.includes(botJid),
+    allAdmins: admins,
+    participants:  participants. map(p => ({ id: p.id, admin: p.admin }))
+  });
 
   const entry: AdminCacheEntry = {
     admins,
