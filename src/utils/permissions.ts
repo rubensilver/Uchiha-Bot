@@ -17,8 +17,8 @@ export async function checkAdmin(
   if (!sock.user || !msg.key?.participant) {
     return {
       isGroup: true,
-      senderIsAdmin:  false,
-      botIsAdmin:  false
+      senderIsAdmin: false,
+      botIsAdmin: false
     };
   }
 

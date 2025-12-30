@@ -31,13 +31,13 @@ export async function getGroupAdminsCached(
     .map(p => normalizeJid(p.id, participants));
 
   // ✅ CORRIGIDO:  Normaliza bot JID com participants
-  const botJid = normalizeJid(sock.user! .id, participants);
+  const botJid = normalizeJid(sock.user!.id, participants);
 
   console.log("👁️ [DEBUG-ADMIN-CACHE]", {
     botJid,
     botExists: admins.includes(botJid),
     allAdmins: admins,
-    participants:  participants. map(p => ({ id: p.id, admin: p.admin }))
+    participants: participants.map(p => ({ id: p.id, admin: p.admin }))
   });
 
   const entry: AdminCacheEntry = {
